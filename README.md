@@ -1,3 +1,3 @@
-# GOOD: Open-source Orientation Driver
+# COMPASS: Open-source Momentum Pointing Angular Stability System​
 
-GOOD is a reaction wheel system for a smallsat being developed by the Husky Satellite Lab, a CubeSat team at the University of Washington.
+COMPASS is a reaction wheel system for a smallsat being developed by the Husky Satellite Lab, a CubeSat team at the University of Washington.
