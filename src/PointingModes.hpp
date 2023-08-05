@@ -1,9 +1,9 @@
 #ifndef RW_SRC_POINTINGMODES_HPP_
 #define RW_SRC_POINTINGMODES_HPP_
 
+#include <eigen3/Eigen/Dense>
 #include <stdint.h>
 #include <cmath>
-#include <eigen3/Eigen/Dense>
 
 namespace pointing_modes {
 
@@ -14,7 +14,7 @@ class PointingMode {
   PointingMode(const PointingMode& other) = default;
   PointingMode& operator=(const PointingMode& other) = default;
 
-  // Given a vector for a requested satellite torque, convert it to a vector 
+  // Given a vector for a requested satellite torque, convert it to a vector
   // of wheel torques and return it in column vector form. The vector's
   // dimensions will be equal to the number of wheels the PointingMode instance operates for.
   virtual void Calculate(const Eigen::Vector<float, 3>& sat_torque,
@@ -26,7 +26,7 @@ class PointingMode {
     uint8_t* const pwms) = 0;
 };
 
-// A pointing mode which implements functions for a four wheel system 
+// A pointing mode which implements functions for a four wheel system
 class FourWheelMode : public PointingMode {
  public:
   FourWheelMode();
@@ -43,9 +43,9 @@ class FourWheelMode : public PointingMode {
 
   // Given a vector of requested wheel torques, PID each motor to that speed by changing
   // and returning the PWM output in the return parameter.
-  virtual void Pid_Speed(const Eigen::Vector<float, Eigen::Dynamic>& wheel_torques,
+  void Pid_Speed(const Eigen::Vector<float, Eigen::Dynamic>& wheel_torques,
     uint8_t* const pwms) override;
-  
+
   // Z, the matrix of wheel torque distributions
   const Eigen::Matrix<float, 3, 4> kWheelTorqueMatrix = (1/std::sqrt(3)) *
     (Eigen::Matrix<float, 3, 4>() << std::sqrt(2), 0, -std::sqrt(2), 0, 0,

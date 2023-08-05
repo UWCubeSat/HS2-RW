@@ -7,11 +7,11 @@
 /* Physical Info */
 namespace physical {
 // physical constants
-static constexpr uint16_t kSerialRate = 9600; 
+static constexpr uint16_t kSerialRate = 9600;
 static constexpr uint8_t kNumWheels = 4;
 
 // pins
-const uint8_t kPwmPins[kNumWheels] = {3, 8, 9, 11};  
+const uint8_t kPwmPins[kNumWheels] = {3, 8, 9, 11};
 const uint8_t kDirectionPins[kNumWheels] = {5, 6, 12, 13};
 const uint8_t kFgPins[kNumWheels] = {18, 19, 2, 3};  // rpm reading pins
 

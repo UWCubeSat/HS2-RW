@@ -19,7 +19,7 @@ class RwStatus {
 
   // Updates internal state of this based on physical data
   void UpdateStatus();
-  
+
   // returns the number of unbroken wheels. Bounded [0,4]
   uint8_t NumWorkingWheels();
 

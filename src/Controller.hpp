@@ -17,7 +17,7 @@ class PID {
 
   // Resets the state of this controller.
   void Reset();
- 
+
  protected:
   // The specific algorithm used to calculate the error in Compute()
   virtual float CalcError(const float setpoint, const float curr_pos);

@@ -1,3 +1,9 @@
+// Copyright (c) 2023 Charles Nguyen
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
 #include "main.hpp"
 #include "RwStatus.hpp"
 
@@ -32,7 +38,7 @@ void loop() {
 
 void SetupSerial() {
   Serial.begin(physical::kSerialRate);
-  while (!Serial);  // wait for Serial
+  while (!Serial) {}  // wait for Serial
 }
 void SetupMotors() {
   // init motor pins
@@ -73,7 +79,7 @@ void SetupRpm() {
   // RPM timers
   // wheels start at 0, which relative to internal is this
   for (int i = 0; i < physical::kNumWheels; i++) { interrupt::wheel_rpm[i] = -interrupt::kZeroRpm; }
-  
+
   // setup global timer
   interrupt::global_time = 0;
   ITimer3.init();

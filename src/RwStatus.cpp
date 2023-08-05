@@ -23,7 +23,7 @@ void TimerHandler() {
 
 void ReadRpm0() {
   wheel_rpm[0] = (kSecPerMin*kRotPerFG*kGlobalRate
-    /(float) (global_time - prev_time[0])) - kZeroRpm;  
+    /(float) (global_time - prev_time[0])) - kZeroRpm;
   prev_time[0] = global_time;
 }
 void ReadRpm1() {
