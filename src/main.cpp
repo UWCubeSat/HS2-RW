@@ -8,20 +8,26 @@
 #include "RwStatus.hpp"
 
 /* Setup functions */
-// initializes serial monitor
+// Initializes serial monitor
 static void SetupSerial();
-// initializes motor pwm and direction pins
+// Initializes motor pwm and direction pins
 static void SetupMotors();
-// initializes SD card reader
+// Initializes the BNO085
+static void SetupImu();
+// Initializes SD card reader
+// Only necessary for testing. Should not exist in finished system
 static void SetupSd();
-// initializes interrupt pins and timer
+// Initializes interrupt pins and timer
 static void SetupRpm();
 
 rw_status::RwStatus wheel_status;
 
 /* Loop functions */
-// initializes system time
+// Itializes system time
 static void UpdateSysTime();
+// Reads the latest information from the imu.
+// Returns the attitude quaternion reading in q and angular velocity in v.
+static void ReadImu(imu::Quaternion& q, imu::Vector<3>& v);
 
 void setup() {
   SetupSerial();
@@ -34,20 +40,47 @@ void setup() {
 
 void loop() {
   UpdateSysTime();
+  
+  imu::Quaternion q;
+  imu::Vector<3> v;
+  ReadImu(q, v);
 }
 
-void SetupSerial() {
+/* Setup */
+static void SetupSerial() {
   Serial.begin(physical::kSerialRate);
   while (!Serial) {}  // wait for Serial
 }
-void SetupMotors() {
+static void SetupMotors() {
   // init motor pins
   for (int i = 0; i < physical::kNumWheels; i++) {
     pinMode(physical::kPwmPins[i], OUTPUT);
     pinMode(physical::kDirectionPins[i], OUTPUT);
   }
 }
-void SetupSd() {
+static void SetupImu() {
+  // TODO anything here failing is pretty bad. It would be impossible for both
+  // reaction wheels and magnetorquers to have a .
+  if (!physical::bno.begin_I2C()) {
+    Serial.print("No BNO085 detected");
+    exit(EXIT_FAILURE);
+  }
+  // GAME_ROTATION_VECTOR has no magnetometer input, so it's more applicable
+  // to HS3. Consider making it absolute orientation (respective to magentic
+  // north) and doing math to get a relative orientation for satellites in a
+  // magnetic field.
+  // It gives values in quaternion form. 
+  if (!physical::bno.enableReport(SH2_GAME_ROTATION_VECTOR)) {
+    Serial.println("Could not enable game vector");
+  }
+  // SH2_GYROSCOPE_CALIBRATED gives velocity for the x,y,z axies.
+  // It includes a bias for compensation that can be separated with
+  // SH2_GYROSCOPE_UNCALIBRATED
+  if (!physical::bno.enableReport(SH2_GYROSCOPE_CALIBRATED)) {
+    Serial.println("Could not enable game vector");
+  }
+}
+static void SetupSd() {
   // init SD reader
   pinMode(physical::kSdPin, OUTPUT);
   digitalWrite(physical::kSdPin, HIGH);
@@ -67,7 +100,7 @@ void SetupSd() {
     exit(EXIT_FAILURE);
   }
 }
-void SetupRpm() {
+static void SetupRpm() {
   for (int i = 0; i < physical::kNumWheels; i++) {
   pinMode(physical::kFgPins[i], INPUT);
   }
@@ -90,8 +123,27 @@ void SetupRpm() {
   }
 }
 
-void UpdateSysTime() {
+/* Loop */
+static void UpdateSysTime() {
   timer::loop_prev_start_time = timer::loop_start_time;
   timer::loop_start_time = millis();
   timer::loop_dt = timer::loop_prev_start_time - timer::loop_start_time;
+}
+static void ReadImu(imu::Quaternion& q, imu::Vector<3>& v) {
+  sh2_SensorValue_t sensor_value;
+  if(!physical::bno.getSensorEvent(&sensor_value)) {
+    Serial.println("bno085 not responsive");
+  }
+
+  switch (sensor_value.sensorId) {
+    case SH2_GAME_ROTATION_VECTOR:
+      q = {sensor_value.un.gameRotationVector.real,
+        sensor_value.un.gameRotationVector.i,
+        sensor_value.un.gameRotationVector.j,
+        sensor_value.un.gameRotationVector.k};
+      break;
+    case SH2_GYROSCOPE_CALIBRATED:
+      v = {sensor_value.un.gyroscope.x, sensor_value.un.gyroscope.y,
+        sensor_value.un.gyroscope.z};
+  }
 }

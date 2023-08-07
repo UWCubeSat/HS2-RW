@@ -2,6 +2,8 @@
 #define RW_SRC_MAIN_HPP_
 
 #include "Arduino.h"
+#include <Adafruit_BNO08x.h>
+#include <utility/imumaths.hpp>
 #include "SD.h"
 
 /* Physical Info */
@@ -18,6 +20,9 @@ const uint8_t kFgPins[kNumWheels] = {18, 19, 2, 3};  // rpm reading pins
 // signals
 uint8_t pwm_signal[kNumWheels] = {0, 0, 0, 0};          // 0-255
 uint8_t direction_signal[kNumWheels] = {1, 1, 1, 1};    // 1 clockwise, 0 ccw
+
+// imu
+Adafruit_BNO08x bno(-1);  // we use I2C for the IMU, so this is unncecessary
 
 // SD reader
 static constexpr uint8_t kChipSelect = 53;  // mega specific number
