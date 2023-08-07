@@ -6,6 +6,7 @@
 // copies or substantial portions of the Software.
 #include "main.hpp"
 #include "RwStatus.hpp"
+#include "Controller.hpp"
 
 /* Setup functions */
 // Initializes serial monitor
@@ -21,6 +22,10 @@ static void SetupSd();
 static void SetupRpm();
 
 rw_status::RwStatus wheel_status;
+// These values have to be tuned
+controller::QuaternionPD qpd(2, 5);
+controller::WheelSpeedPD wpd(0.001, 0);
+
 
 /* Loop functions */
 // Itializes system time
