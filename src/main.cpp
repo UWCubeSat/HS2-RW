@@ -37,6 +37,7 @@ static void ReadImu(imu::Quaternion& q, imu::Vector<3>& v);
 void setup() {
   SetupSerial();
   SetupMotors();
+  SetupImu();
   SetupSd();
   SetupRpm();
 
