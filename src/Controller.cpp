@@ -1,24 +1,29 @@
 #include "Controller.hpp"
 
 namespace controller {
-float PID::Compute(const float setpoint, const float curr_pos, const float dt) {
-  float error = CalcError(setpoint, curr_pos);
+imu::Vector<3> QuaternionPD::Compute(const imu::Quaternion& q_desired,
+                                     const imu::Quaternion& q_curr, 
+                                     const imu::Vector<3>& omega) const {
+  imu::Quaternion error = CalcError(q_desired, q_curr);
+  imu::Vector<3> xyz = {error.x(), error.y(), error.z()};
+  return xyz*-kP - omega*kD;
+}
 
-  float output;
-  output = kP*error + kI*accumulated_err_ + (dt == 0) ? 0 : kD*(error - prev_err_)/dt;
+imu::Quaternion QuaternionPD::CalcError(const imu::Quaternion& q_desired,
+                                        const imu::Quaternion& q_curr) const {
+  return q_desired.conjugate() * q_curr;
+}
 
+float WheelSpeedPD::Compute(const float rpm_desired,
+                            const float rpm_curr,
+                            const float dt) {
+  float error = CalcError(rpm_desired, rpm_curr);
+  float output = kP*error + (dt == 0 ? 0 : kD*(error - prev_err_)/dt);
   prev_err_ = error;
-  accumulated_err_ += error*dt;
-
   return output;
 }
 
-void PID::Reset() {
-  prev_err_ = 0;
-  accumulated_err_ = 0;
-}
-
-float PID::CalcError(const float setpoint, const float curr_pos) {
-  return setpoint - curr_pos;
+float WheelSpeedPD::CalcError(const float rpm_desired, const float rpm_curr) {
+  return rpm_desired - rpm_curr;
 }
 }  // namespace controller

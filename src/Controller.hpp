@@ -1,30 +1,49 @@
 #ifndef RW_SRC_CONTROLLER_HPP_
 #define RW_SRC_CONTROLLER_HPP_
 
+#include <utility/imumaths.hpp>
+
 namespace controller {
-// Standard linear-error PID controller
-class PID {
+// Quaternion error PD controller
+class QuaternionPD {
  public:
-  PID(const float p, const float i, const float d) : kP(p), kI(i), kD(d),
-    prev_err_(0), accumulated_err_(0) {}
-  virtual ~PID() = default;
-  PID(const PID& other) = default;
-  PID& operator=(const PID& other) = default;
+  QuaternionPD(const float p, const float d) : kP(p), kD(d) {}
+  virtual ~QuaternionPD() = default;
+  QuaternionPD(const QuaternionPD& other) = default;
+  QuaternionPD& operator=(const QuaternionPD& other) = default;
 
-  // Based on input parameters, calculates the PID output and returns it as a float.
-  // Modifies internal state of error tracking.
-  virtual float Compute(const float setpoint, const float curr_pos, const float dt);
-
-  // Resets the state of this controller.
-  void Reset();
+  // Based on input parameters, calculates a torque requirement along the 
+  // x,y,z axies of rotation 
+  // given by the the control law u = -kP*q_error_xyz -kD*omega_body
+  virtual imu::Vector<3> Compute(const imu::Quaternion& q_desired,
+    const imu::Quaternion& q_curr, const imu::Vector<3>& omega) const;
 
  protected:
-  // The specific algorithm used to calculate the error in Compute()
-  virtual float CalcError(const float setpoint, const float curr_pos);
+  // Calculates the quaternion error = (q*)q
+  virtual imu::Quaternion CalcError(const imu::Quaternion& setpoint,
+    const imu::Quaternion& curr_pos) const;
  private:
-  const float kP, kI, kD;
+  const float kP, kD;
+};
+
+// Reaction wheel speed PD controller
+class WheelSpeedPD {
+ public:
+  WheelSpeedPD(const float p, const float d) : kP(p), kD(d), prev_err_(0) {}
+  virtual ~WheelSpeedPD() = default;
+  WheelSpeedPD(const WheelSpeedPD& other) = default;
+  WheelSpeedPD& operator=(const WheelSpeedPD& other) = default;
+
+  // Based on input parameters calculates a delta in pwm for a given wheel
+  virtual float Compute(const float rpm_desired,
+    const float rpm_curr, const float dt);
+
+ protected:
+  // Calculates the error = rpm_desired - rpm_curr
+  virtual float CalcError(const float rpm_desired, const float rpm_curr);
+ private:
+  const float kP, kD;
   float prev_err_;
-  float accumulated_err_;
 };
 }  // namespace controller
 #endif // RW_SRC_CONTROLLER_HPP_
