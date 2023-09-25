@@ -21,8 +21,9 @@ class PointingMode {
     float* const* const wheel_torques) const = 0;
 
   // Given an array of requested wheel torques, PID each motor to that speed by
-  // changing and returning the PWM output.
-  virtual uint8_t* Pid_Speed(const float* const * const wheel_torques) = 0;
+  // changing and returning the PWM output parameter.
+  virtual void Pid_Speed(const float* const * const wheel_torques, const uint32_t dt,
+    controller::WheelSpeedPD wpd, uint8_t* const* const pwm) = 0;
 };
 
 // A pointing mode which implements functions for a four wheel system
@@ -41,19 +42,16 @@ class FourWheelMode : public PointingMode {
     float* const* const wheel_torques) const override;
 
   // Given a vector of requested wheel torques, PID each motor to that speed by changing
-  // and returning the PWM output in the return parameter.
-  uint8_t* Pid_Speed(const float* const* const wheel_torques) override;
+  // and returning the PWM output in the pwm return parameter.
+  void Pid_Speed(const float* const* const wheel_torques, const uint32_t dt,
+    controller::WheelSpeedPD wpd, uint8_t* const* const pwm) override;
 
-  // TODO make this not stl
-  // Z, the matrix of wheel torque distributions
-  const Eigen::Matrix<float, 3, 4> kWheelTorqueMatrix = (1/std::sqrt(3)) *
-    (Eigen::Matrix<float, 3, 4>() << std::sqrt(2), 0, -std::sqrt(2), 0, 0,
-    std::sqrt(2), 0, -std::sqrt(2), 1, 1, 1, 1).finished();
-  // Z+, the pseudoinverse of Z such that Z * Z+ = Z+ * Z = I in R3x3 and R4x4 respectively
-  const Eigen::Matrix<float, 4, 3> kPseudoinverse =
-    kWheelTorqueMatrix.completeOrthogonalDecomposition().pseudoInverse();
  private:
+  const uint8_t kNumWheels = 4;
   uint8_t wheel_pwm_[4];
+  const float kWheelMoment[4] = {0, 0, 0, 0};
+  const float kSqrt3Div4 = 0.433012701892219;
+  imu::Matrix<4> pseudoinverse_;
 };
 
 }  // namespace pointing_modes
