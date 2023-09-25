@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <utility/imumaths.hpp>
+#include "Controller.hpp"
 
 namespace pointing_modes {
 
