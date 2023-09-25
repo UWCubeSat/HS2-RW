@@ -13,7 +13,7 @@ class QuaternionPD {
   QuaternionPD& operator=(const QuaternionPD& other) = default;
 
   // Based on input parameters, calculates a torque requirement along the 
-  // x,y,z axies of rotation 
+  // x,y,z axies of rotation
   // given by the the control law u = -kP*q_error_xyz -kD*omega_body
   virtual imu::Vector<3> Compute(const imu::Quaternion& q_desired,
     const imu::Quaternion& q_curr, const imu::Vector<3>& omega) const;

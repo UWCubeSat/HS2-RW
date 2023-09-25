@@ -26,7 +26,6 @@ rw_status::RwStatus wheel_status;
 controller::QuaternionPD qpd(2, 5);
 controller::WheelSpeedPD wpd(0.001, 0);
 
-
 /* Loop functions */
 // Itializes system time
 static void UpdateSysTime();
@@ -46,7 +45,7 @@ void setup() {
 
 void loop() {
   UpdateSysTime();
-  
+
   imu::Quaternion q;
   imu::Vector<3> v;
   ReadImu(q, v);
@@ -75,7 +74,7 @@ static void SetupImu() {
   // to HS3. Consider making it absolute orientation (respective to magentic
   // north) and doing math to get a relative orientation for satellites in a
   // magnetic field.
-  // It gives values in quaternion form. 
+  // It gives values in quaternion form.
   if (!physical::bno.enableReport(SH2_GAME_ROTATION_VECTOR)) {
     Serial.println("Could not enable game vector");
   }
