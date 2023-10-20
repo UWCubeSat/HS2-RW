@@ -3,7 +3,7 @@
 #include "RwStatus.hpp"
 
 namespace pointing_modes {
-FourWheelMode::FourWheelMode() : wheel_pwm_({0, 0, 0, 0}) {
+FourWheelMode::FourWheelMode() : wheel_pwm_{0, 0, 0, 0} {
   // set the values for the pseudoinverse, as described in the doc
   pseudoinverse_.cell(0,0) = kSqrt3Div4;
   pseudoinverse_.cell(1,0) = -kSqrt3Div4;

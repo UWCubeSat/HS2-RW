@@ -41,7 +41,7 @@ uint32_t loop_dt;               // delta between current and prev loop
 /* Utility functions*/
 namespace util {
 // returns 1 if x > 0, 0 if x = 0, -1 if x < 0
-static inline bool sign(double x) { return x < 0 ? -1 : (x > 0 ? 1 : 0); }
+static inline bool sign(double x) { return (x < 0) ? -1 : ((x > 0) ? 1 : 0); }
 }
 
 #endif // RW_SRC_MAIN_HPP_
