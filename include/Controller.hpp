@@ -15,12 +15,12 @@ class QuaternionPD {
   // Based on input parameters, calculates a torque requirement along the 
   // x,y,z axies of rotation
   // given by the the control law u = -kP*q_error_xyz -kD*omega_body
-  virtual imu::Vector<3> Compute(const imu::Quaternion& q_desired,
+  imu::Vector<3> Compute(const imu::Quaternion& q_desired,
     const imu::Quaternion& q_curr, const imu::Vector<3>& omega) const;
 
  protected:
   // Calculates the quaternion error = (q*)q
-  virtual imu::Quaternion CalcError(const imu::Quaternion& setpoint,
+  imu::Quaternion CalcError(const imu::Quaternion& setpoint,
     const imu::Quaternion& curr_pos) const;
  private:
   const float kP, kD;
@@ -35,12 +35,11 @@ class WheelSpeedPD {
   WheelSpeedPD& operator=(const WheelSpeedPD& other) = default;
 
   // Based on input parameters calculates a delta in pwm for a given wheel
-  virtual float Compute(const float rpm_desired,
-    const float rpm_curr, const float dt);
+  float Compute(const float rpm_desired, const float rpm_curr, const float dt);
 
  protected:
   // Calculates the error = rpm_desired - rpm_curr
-  virtual float CalcError(const float rpm_desired, const float rpm_curr);
+  float CalcError(const float rpm_desired, const float rpm_curr);
  private:
   const float kP, kD;
   float prev_err_;

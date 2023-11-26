@@ -7,6 +7,7 @@
 #include "main.hpp"
 #include "RwStatus.hpp"
 #include "Controller.hpp"
+#include "PointingModes.hpp"
 
 /* Setup functions */
 // Initializes serial monitor
@@ -22,9 +23,9 @@ static void SetupSd();
 static void SetupRpm();
 
 rw_status::RwStatus wheel_status;
-// These values have to be tuned
-controller::QuaternionPD qpd(2, 5);
-controller::WheelSpeedPD wpd(0.001, 0);
+controller::QuaternionPD qpd(1e-2, 0);
+controller::WheelSpeedPD wpd(1e-3, 0);
+pointing_modes::FourWheelMode four;
 
 /* Loop functions */
 // Itializes system time
@@ -49,6 +50,25 @@ void loop() {
   imu::Quaternion q;
   imu::Vector<3> v;
   ReadImu(q, v);
+
+  imu::Quaternion q_desired(0,1,0,0);
+  imu::Vector<3> torque_req = qpd.Compute(q_desired, q, v);
+  float wheel_torques[4];
+  uint8_t pwm[4];
+  four.Calculate(torque_req, wheel_torques);
+  four.Pid_Speed(wheel_torques, timer::loop_dt, wpd, pwm);
+
+  for (int i = 0; i < 4; i++) {
+    digitalWrite(physical::kDirectionPins[i], 1);
+    analogWrite(physical::kPwmPins[i], abs(pwm[i]));
+  }
+
+  // use wheel_status
+  Serial.println(interrupt::wheel_rpm[0]);
+  Serial.println(interrupt::wheel_rpm[1]);
+  Serial.println(interrupt::wheel_rpm[2]);
+  Serial.println(interrupt::wheel_rpm[3]);
+  Serial.println("");
 }
 
 /* Setup */
@@ -65,7 +85,7 @@ static void SetupMotors() {
 }
 static void SetupImu() {
   // TODO anything here failing is pretty bad. It would be impossible for both
-  // reaction wheels and magnetorquers to have a .
+  // reaction wheels and magnetorquers to have functionality.
   if (!physical::bno.begin_I2C()) {
     Serial.print("No BNO085 detected");
     exit(EXIT_FAILURE);

@@ -5,7 +5,7 @@ imu::Vector<3> QuaternionPD::Compute(const imu::Quaternion& q_desired,
                                      const imu::Quaternion& q_curr,
                                      const imu::Vector<3>& omega) const {
   imu::Quaternion error = CalcError(q_desired, q_curr);
-  imu::Vector<3> xyz = {error.x(), error.y(), error.z()};
+  imu::Vector<3> xyz(error.x(), error.y(), error.z());
   return xyz*-kP - omega*kD;
 }
 
