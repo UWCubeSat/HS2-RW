@@ -56,7 +56,7 @@ void loop() {
   float wheel_torques[4];
   uint8_t pwm[4];
   four.Calculate(torque_req, wheel_torques);
-  four.Pid_Speed(wheel_torques, timer::loop_dt, wpd, pwm);
+  four.Pid_Speed(wheel_torques, timer::loop_dt, wpd, interrupt::wheel_rpm, pwm);
 
   for (int i = 0; i < 4; i++) {
     digitalWrite(physical::kDirectionPins[i], 1);

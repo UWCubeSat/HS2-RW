@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 #include <Adafruit_BNO08x.h>
-#include <utility/imumaths.hpp>
+#include <imumaths.hpp>
 #include "SD.h"
 
 /* Physical Info */

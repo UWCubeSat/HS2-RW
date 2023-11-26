@@ -1,6 +1,5 @@
 #include "PointingModes.hpp"
 #include "Controller.hpp"
-#include "RwStatus.hpp"
 
 namespace pointing_modes {
 FourWheelMode::FourWheelMode() : wheel_pwm_{0, 0, 0, 0} {
@@ -34,10 +33,10 @@ void FourWheelMode::Calculate(const imu::Vector<3>& sat_torque, float wheel_torq
 }
 
 void FourWheelMode::Pid_Speed(const float wheel_torques[], const uint32_t dt,
-  controller::WheelSpeedPD& wpd, uint8_t pwm[]) {
+  controller::WheelSpeedPD& wpd, volatile float wheel_rpm[], uint8_t pwm[]) {
   for (uint8_t i = 0; i < kNumWheels; i++) {
     // integrate (torques * wheelmoment) to get speed
-    wheel_pwm_[i] += wpd.Compute(wheel_torques[i] * kWheelMoment[i] * dt, interrupt::wheel_rpm[i], dt);
+    wheel_pwm_[i] += wpd.Compute(wheel_torques[i] * kWheelMoment[i] * dt, wheel_rpm[i], dt);
     pwm[i] = wheel_pwm_[i];
   }
 }

@@ -1,7 +1,8 @@
 #ifndef RW_SRC_CONTROLLER_HPP_
 #define RW_SRC_CONTROLLER_HPP_
 
-#include <utility/imumaths.hpp>
+#include <../../include/quaternion.hpp>
+#include <../../include/vector.hpp>
 
 namespace controller {
 // Quaternion error PD controller
@@ -12,7 +13,7 @@ class QuaternionPD {
   QuaternionPD(const QuaternionPD& other) = default;
   QuaternionPD& operator=(const QuaternionPD& other) = default;
 
-  // Based on input parameters, calculates a torque requirement along the 
+  // Based on input parameters, calculates a torque requirement along the
   // x,y,z axies of rotation
   // given by the the control law u = -kP*q_error_xyz -kD*omega_body
   imu::Vector<3> Compute(const imu::Quaternion& q_desired,

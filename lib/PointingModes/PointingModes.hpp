@@ -2,8 +2,9 @@
 #define RW_SRC_POINTINGMODES_HPP_
 
 #include <stdint.h>
-#include <utility/imumaths.hpp>
-#include "Controller.hpp"
+#include <../../include/matrix.hpp>
+#include <../../include/vector.hpp>
+#include "../Controller/Controller.hpp"
 
 namespace pointing_modes {
 
@@ -23,7 +24,7 @@ class PointingMode {
   // Given an array of requested wheel torques, PID each motor to that speed by
   // changing and returning the PWM output parameter.
   virtual void Pid_Speed(const float wheel_torques[], const uint32_t dt,
-    controller::WheelSpeedPD& wpd, uint8_t pwm[]) = 0;
+    controller::WheelSpeedPD& wpd, volatile float wheel_rpm[], uint8_t pwm[]) = 0;
 };
 
 // A pointing mode which implements functions for a four wheel system
@@ -43,7 +44,7 @@ class FourWheelMode : public PointingMode {
   // Given a vector of requested wheel torques, PID each motor to that speed by changing
   // and returning the PWM output in the pwm return parameter.
   void Pid_Speed(const float wheel_torques[], const uint32_t dt,
-    controller::WheelSpeedPD& wpd, uint8_t pwm[]) override;
+    controller::WheelSpeedPD& wpd, volatile float wheel_rpm[], uint8_t pwm[]) override;
 
  private:
   const uint8_t kNumWheels = 4;
