@@ -51,11 +51,11 @@ Don't define _TIMERINTERRUPT_LOGLEVEL_ > 0. Only for special ISR debugging only.
 
 namespace interrupt {
 // Wheel RPM timer
-static constexpr float kZeroRpm = 5500;            // midpoint of min and max
+static constexpr float kZeroRpm = 7500;           // midpoint of min and max  // true 15500
 static constexpr float kMinRpm = 1000 - kZeroRpm;  // actual min - kZero
-static constexpr float kMaxRpm = 10000 - kZeroRpm; // actual max - kZero
+static constexpr float kMaxRpm = 14000 - kZeroRpm; // actual max - kZero  // true 30000
 static constexpr float kGlobalRate = 10000;        // Hz of timer
-static constexpr float kRotPerFG = 0.5;            // Ticks per
+static constexpr float kRotPerFG = 1;              // Ticks per
 static constexpr uint8_t kSecPerMin = 60;          // seconds per minute
 volatile uint32_t prev_time[rw_status::kNumWheels] = {0, 0, 0, 0};  // 0.1 ms
 volatile float wheel_rpm[rw_status::kNumWheels] = {0, 0, 0, 0};     // index to motors

@@ -33,7 +33,7 @@ class FourWheelMode : public PointingMode {
   FourWheelMode();
   virtual ~FourWheelMode() = default;
   FourWheelMode(const FourWheelMode& other) = delete;
-  FourWheelMode& operator=(const FourWheelMode& other) = delete;
+  FourWheelMode& operator=(const FourWheelMode& other) = default;
 
   // Given a vector for a requested satellite torque, convert it to 4 wheel torques
   // by multiplying the pseudoinverse by our the torque requirement: T_w = Z+ * T_s
@@ -45,11 +45,14 @@ class FourWheelMode : public PointingMode {
   // and returning the PWM output in the pwm return parameter.
   void Pid_Speed(const float wheel_torques[], const uint32_t dt,
     controller::WheelSpeedPD& wpd, volatile float wheel_rpm[], uint8_t pwm[]) override;
+  float wheel_pwm_[4] = {64, 64, 64, 64};
+  const float kWheelMoment[4] = {7e-4, 7e-4, 7e-4, 7e-4};
 
+  void Test_Speed_Command(const float desired_rpm[], volatile float wheel_rpm[], const uint32_t dt,
+    controller::WheelSpeedPD& wpd, uint8_t pwm[]);
  private:
   const uint8_t kNumWheels = 4;
-  uint8_t wheel_pwm_[4];
-  const float kWheelMoment[4] = {0, 0, 0, 0};
+  const float radps_rpm = 9.54929658551;
   const float kSqrt3Div4 = 0.433012701892219;
   imu::Matrix<4> pseudoinverse_;
 };

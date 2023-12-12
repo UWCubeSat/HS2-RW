@@ -23,7 +23,8 @@ static void SetupSd();
 static void SetupRpm();
 
 rw_status::RwStatus wheel_status;
-controller::QuaternionPD qpd(1e-2, 0);
+controller::QuaternionPD qpd(1, 0);
+// controller::WheelSpeedPD init_wpd(1e-2, 0);
 controller::WheelSpeedPD wpd(1e-3, 0);
 pointing_modes::FourWheelMode four;
 
@@ -42,8 +43,10 @@ void setup() {
   SetupRpm();
 
   timer::init_time = millis();
+  timer::loop_start_time = timer::init_time;
 }
 
+int counter = 0;
 void loop() {
   UpdateSysTime();
 
@@ -55,8 +58,32 @@ void loop() {
   imu::Vector<3> torque_req = qpd.Compute(q_desired, q, v);
   float wheel_torques[4];
   uint8_t pwm[4];
-  four.Calculate(torque_req, wheel_torques);
-  four.Pid_Speed(wheel_torques, timer::loop_dt, wpd, interrupt::wheel_rpm, pwm);
+  Serial.print("qe: ");
+  imu::Quaternion qe = q_desired.conjugate() * q;
+  Serial.print(qe.w());
+  Serial.print(", ");
+  Serial.print(qe.x());
+  Serial.print(", ");
+  Serial.print(qe.y());
+  Serial.print(", ");
+  Serial.println(qe.z());
+  // Serial.print("wheel_torques: ");
+  // Serial.println(wheel_torques[0]);
+  // Serial.print("dt: ");
+  // Serial.println(timer::loop_dt);
+  // Serial.print("calc: ");
+  // Serial.println(wheel_torques[0] / four.kWheelMoment[0] * timer::loop_dt);
+  // Serial.println(interrupt::wheel_rpm[0]);
+
+  if (counter < 200) {
+    four.Test_Speed_Command(0, interrupt::wheel_rpm, timer::loop_dt, wpd, pwm);
+    counter++;
+    Serial.println("init speeds");
+  } else {
+    four.Calculate(torque_req, wheel_torques);
+    four.Pid_Speed(wheel_torques, timer::loop_dt, wpd, interrupt::wheel_rpm, pwm);
+  }
+
 
   for (int i = 0; i < 4; i++) {
     digitalWrite(physical::kDirectionPins[i], 1);
@@ -64,10 +91,29 @@ void loop() {
   }
 
   // use wheel_status
+
   Serial.println(interrupt::wheel_rpm[0]);
   Serial.println(interrupt::wheel_rpm[1]);
   Serial.println(interrupt::wheel_rpm[2]);
   Serial.println(interrupt::wheel_rpm[3]);
+  // Serial.println(v[0]);
+  // Serial.println(v[1]);
+  // Serial.println(v[2]);
+  // Serial.println(pwm[0]);
+  // Serial.println(pwm[1]);
+  // Serial.println(pwm[2]);
+  // Serial.println(pwm[3]);
+  // Serial.println(torque_req[0]);
+  // Serial.println(torque_req[1]);
+  // Serial.println(torque_req[2]);
+  // Serial.println(wheel_torques[0]);
+  // Serial.println(wheel_torques[1]);
+  // Serial.println(wheel_torques[2]);
+  // Serial.println(wheel_torques[3]);
+  // Serial.println(q.w());
+  // Serial.println(q.x());
+  // Serial.println(q.y());
+  // Serial.println(q.z());
   Serial.println("");
 }
 
@@ -152,7 +198,7 @@ static void SetupRpm() {
 static void UpdateSysTime() {
   timer::loop_prev_start_time = timer::loop_start_time;
   timer::loop_start_time = millis();
-  timer::loop_dt = timer::loop_prev_start_time - timer::loop_start_time;
+  timer::loop_dt = timer::loop_start_time - timer::loop_prev_start_time;
 }
 static void ReadImu(imu::Quaternion& q, imu::Vector<3>& v) {
   sh2_SensorValue_t sensor_value;
