@@ -52,8 +52,8 @@ class FourWheelMode : public PointingMode {
     controller::WheelSpeedPD& wpd, uint8_t pwm[]);
  private:
   const uint8_t kNumWheels = 4;
-  const float radps_rpm = 9.54929658551;
-  const float kSqrt3Div4 = 0.433012701892219;
+  const float radps_rpm = 9.549;//29658551;
+  const float kSqrt3Div4 = 0.433;//012701892219;
   imu::Matrix<4> pseudoinverse_;
 };
 

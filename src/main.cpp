@@ -54,19 +54,19 @@ void loop() {
   imu::Vector<3> v;
   ReadImu(q, v);
 
-  imu::Quaternion q_desired(0,1,0,0);
+  imu::Quaternion q_desired(0.0, 0.0, 0.0, 1.0);
   imu::Vector<3> torque_req = qpd.Compute(q_desired, q, v);
   float wheel_torques[4];
   uint8_t pwm[4];
-  Serial.print("qe: ");
+  Serial.print("q: ");
   imu::Quaternion qe = q_desired.conjugate() * q;
-  Serial.print(qe.w());
+  Serial.print(q.w());
   Serial.print(", ");
-  Serial.print(qe.x());
+  Serial.print(q.x());
   Serial.print(", ");
-  Serial.print(qe.y());
+  Serial.print(q.y());
   Serial.print(", ");
-  Serial.println(qe.z());
+  Serial.println(q.z());
   // Serial.print("wheel_torques: ");
   // Serial.println(wheel_torques[0]);
   // Serial.print("dt: ");
@@ -76,7 +76,8 @@ void loop() {
   // Serial.println(interrupt::wheel_rpm[0]);
 
   if (counter < 200) {
-    four.Test_Speed_Command(0, interrupt::wheel_rpm, timer::loop_dt, wpd, pwm);
+    float test[] = {15000, 15000, 15000, 15000};
+    four.Test_Speed_Command(test, interrupt::wheel_rpm, timer::loop_dt, wpd, pwm);
     counter++;
     Serial.println("init speeds");
   } else {
@@ -90,19 +91,19 @@ void loop() {
     analogWrite(physical::kPwmPins[i], abs(pwm[i]));
   }
 
-  // use wheel_status
+  // TODO: use wheel_status
 
-  Serial.println(interrupt::wheel_rpm[0]);
-  Serial.println(interrupt::wheel_rpm[1]);
-  Serial.println(interrupt::wheel_rpm[2]);
-  Serial.println(interrupt::wheel_rpm[3]);
+  // Serial.println(interrupt::wheel_rpm[0]);
+  // Serial.println(interrupt::wheel_rpm[1]);
+  // Serial.println(interrupt::wheel_rpm[2]);
+  // Serial.println(interrupt::wheel_rpm[3]);
   // Serial.println(v[0]);
   // Serial.println(v[1]);
   // Serial.println(v[2]);
-  // Serial.println(pwm[0]);
-  // Serial.println(pwm[1]);
-  // Serial.println(pwm[2]);
-  // Serial.println(pwm[3]);
+  Serial.println(pwm[0]);
+  Serial.println(pwm[1]);
+  Serial.println(pwm[2]);
+  Serial.println(pwm[3]);
   // Serial.println(torque_req[0]);
   // Serial.println(torque_req[1]);
   // Serial.println(torque_req[2]);

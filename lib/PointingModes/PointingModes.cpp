@@ -42,7 +42,7 @@ void FourWheelMode::Calculate(const imu::Vector<3>& sat_torque, float wheel_torq
 void FourWheelMode::Pid_Speed(const float wheel_torques[], const uint32_t dt,
   controller::WheelSpeedPD& wpd, volatile float wheel_rpm[], uint8_t pwm[]) {
   for (uint8_t i = 0; i < kNumWheels; i++) {
-    // integrate (torques / wheelmoment) to get speed
+    // integrate (torques / wheel_moment_of_inertia) to get speed
     float delta_rpm = (wheel_torques[i] / kWheelMoment[i] * dt / 1000.0) * radps_rpm;
     wheel_pwm_[i] = CLAMP(wheel_pwm_[i] + wpd.Compute(wheel_rpm[i] + delta_rpm, wheel_rpm[i], dt), 0.0, 127.0);
     pwm[i] = wheel_pwm_[i];
