@@ -2,22 +2,27 @@
 #define RW_SRC_MAIN_HPP_
 
 #include "Arduino.h"
+#include <Adafruit_BNO08x.h>
+#include <imumaths.hpp>
 #include "SD.h"
 
 /* Physical Info */
 namespace physical {
 // physical constants
-static constexpr uint16_t kSerialRate = 9600; 
+static constexpr uint16_t kSerialRate = 9600;
 static constexpr uint8_t kNumWheels = 4;
 
 // pins
-const uint8_t kPwmPins[kNumWheels] = {3, 8, 9, 11};  
-const uint8_t kDirectionPins[kNumWheels] = {5, 6, 12, 13};
+const uint8_t kPwmPins[kNumWheels] = {10, 11, 12, 13};
+const uint8_t kDirectionPins[kNumWheels] = {44, 40, 36, 32};
 const uint8_t kFgPins[kNumWheels] = {18, 19, 2, 3};  // rpm reading pins
 
 // signals
 uint8_t pwm_signal[kNumWheels] = {0, 0, 0, 0};          // 0-255
 uint8_t direction_signal[kNumWheels] = {1, 1, 1, 1};    // 1 clockwise, 0 ccw
+
+// imu
+Adafruit_BNO08x bno(-1);  // we use I2C for the IMU, so this is unncecessary
 
 // SD reader
 static constexpr uint8_t kChipSelect = 53;  // mega specific number
@@ -36,7 +41,7 @@ uint32_t loop_dt;               // delta between current and prev loop
 /* Utility functions*/
 namespace util {
 // returns 1 if x > 0, 0 if x = 0, -1 if x < 0
-static inline bool sign(double x) { return x < 0 ? -1 : (x > 0 ? 1 : 0); }
+static inline bool sign(double x) { return (x < 0) ? -1 : ((x > 0) ? 1 : 0); }
 }
 
 #endif // RW_SRC_MAIN_HPP_
