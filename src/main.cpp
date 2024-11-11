@@ -68,19 +68,21 @@ void loop()
   Serial.print(current_quaternion.y());
   Serial.print(", ");
   Serial.println(current_quaternion.z());
-  // Serial.print("wheel_torques: ");
-  // Serial.println(wheel_torques[0]);
-  // Serial.print("dt: ");
-  // Serial.println(timer::loop_dt);
-  // Serial.print("calc: ");
-  // Serial.println(wheel_torques[0] / WheelController.kWheelMoment[0] * timer::loop_dt);
-  // Serial.println(interrupt::wheel_rpm[0]);
+  /*
+  Serial.print("wheel_torques: ");
+  Serial.println(wheel_torques[0]);
+  Serial.print("dt: ");
+  Serial.println(timer::loop_dt);
+  Serial.print("calc: ");
+  Serial.println(wheel_torques[0] / WheelController.kWheelMoment[0] * timer::loop_dt);
+  Serial.println(interrupt::wheel_rpm[0]);
+*/
 
-  // if (counter < test_parameters::spin_up_ticks) {
+  // if (counter < test_parameters::spin_up_ticks)
   if (timer::init_time / 1000.f < test_parameters::spin_up_seconds)
   {
     WheelController.Test_Speed_Command(test_parameters::test_target_speed, interrupt::wheel_rpm, timer::loop_dt, WheelSpeed_PD, pwm);
-    //counter++;
+    // counter++;
     Serial.println("init speeds");
   }
   else
@@ -96,29 +98,32 @@ void loop()
   }
 
   // TODO: use wheel_status
-
-  // Serial.println(interrupt::wheel_rpm[0]);
-  // Serial.println(interrupt::wheel_rpm[1]);
-  // Serial.println(interrupt::wheel_rpm[2]);
-  // Serial.println(interrupt::wheel_rpm[3]);
-  // Serial.println(v[0]);
-  // Serial.println(v[1]);
-  // Serial.println(v[2]);
+  /*
+  Serial.println(interrupt::wheel_rpm[0]);
+  Serial.println(interrupt::wheel_rpm[1]);
+  Serial.println(interrupt::wheel_rpm[2]);
+  Serial.println(interrupt::wheel_rpm[3]);
+  Serial.println(v[0]);
+  Serial.println(v[1]);
+  Serial.println(v[2]);
+  */
   Serial.println(pwm[0]);
   Serial.println(pwm[1]);
   Serial.println(pwm[2]);
   Serial.println(pwm[3]);
-  // Serial.println(torque_req[0]);
-  // Serial.println(torque_req[1]);
-  // Serial.println(torque_req[2]);
-  // Serial.println(wheel_torques[0]);
-  // Serial.println(wheel_torques[1]);
-  // Serial.println(wheel_torques[2]);
-  // Serial.println(wheel_torques[3]);
-  // Serial.println(q.w());
-  // Serial.println(q.x());
-  // Serial.println(q.y());
-  // Serial.println(q.z());
+  /*
+  Serial.println(torque_req[0]);
+  Serial.println(torque_req[1]);
+  Serial.println(torque_req[2]);
+  Serial.println(wheel_torques[0]);
+  Serial.println(wheel_torques[1]);
+  Serial.println(wheel_torques[2]);
+  Serial.println(wheel_torques[3]);
+  Serial.println(q.w());
+  Serial.println(q.x());
+  Serial.println(q.y());
+  Serial.println(q.z());
+  */
   Serial.println("");
 }
 
@@ -230,12 +235,18 @@ static void UpdateSysTime()
 }
 static void ReadImu(imu::Quaternion &q, imu::Vector<3> &v)
 {
+  /*
+  One pretty fundamental question I have here is that I'm pretty sure this function leaves either 'q' or 'v' in its default unassigned state.
+  In loop(), q and v are unassi
+  */
+  // so these few lines are pretty self explanatory: create new sensor_value struct, and then read the imu, and if the read fails print an error
   sh2_SensorValue_t sensor_value;
   if (!physical::bno.getSensorEvent(&sensor_value))
   {
     Serial.println("bno085 not responsive");
   }
 
+  // What I don't understand here the 'sensor_value.sensorId' can only be one number (right?), so EITHER case 1 will be true and q will be assigned OR case 2 will be true and v will be assigned
   switch (sensor_value.sensorId)
   {
   case SH2_GAME_ROTATION_VECTOR:
