@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+
 namespace rw_status
 {
   static constexpr uint8_t kNumWheels = 4;
@@ -52,11 +53,11 @@ Don't define _TIMERINTERRUPT_LOGLEVEL_ > 0. Only for special ISR debugging only.
 #include "TimerInterrupt.h"
 #include "ISR_Timer.h"
 
+
 namespace interrupt
 {
   // Wheel RPM timer
-  //static constexpr float kZeroRpm = 7500;                            // midpoint of min and max  // true 15500
-  static constexpr float kZeroRpm = test_parameters::rpm_midpoint;
+  static constexpr float kZeroRpm = 7500;                            // midpoint of min and max  // true 15500
   static constexpr float kMinRpm = 1000 - kZeroRpm;                  // actual min - kZero
   static constexpr float kMaxRpm = 14000 - kZeroRpm;                 // actual max - kZero  // true 30000
   static constexpr float kGlobalRate = 10000;                        // Hz of timer
