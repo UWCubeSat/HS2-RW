@@ -56,11 +56,11 @@ void loop()
   imu::Vector<3> current_gyro_reading;
   ReadImu(current_quaternion, current_gyro_reading);
 
-  imu::Vector<3> torque_req = QuaternionTorque_PD.Compute(test_parameters::test_target_quaternion, current_quaternion, current_gyro_reading);
+  imu::Vector<3> torque_req = QuaternionTorque_PD.Compute(test_parameters::target_quaternion, current_quaternion, current_gyro_reading);
   float wheel_torques[4];
   uint8_t pwm[4];
   Serial.print("q: ");
-  imu::Quaternion qe = test_parameters::test_target_quaternion.conjugate() * current_quaternion;
+  imu::Quaternion qe = test_parameters::target_quaternion.conjugate() * current_quaternion;
   Serial.print(current_quaternion.w());
   Serial.print(", ");
   Serial.print(current_quaternion.x());
@@ -81,7 +81,7 @@ void loop()
   // if (counter < test_parameters::spin_up_ticks)
   if (timer::init_time / 1000.f < test_parameters::spin_up_seconds)
   {
-    WheelController.Test_Speed_Command(test_parameters::test_target_speed, interrupt::wheel_rpm, timer::loop_dt, WheelSpeed_PD, pwm);
+    WheelController.Test_Speed_Command(test_parameters::target_speed, interrupt::wheel_rpm, timer::loop_dt, WheelSpeed_PD, pwm);
     // counter++;
     Serial.println("init speeds");
   }
@@ -237,7 +237,7 @@ static void ReadImu(imu::Quaternion &q, imu::Vector<3> &v)
 {
   /*
   One pretty fundamental question I have here is that I'm pretty sure this function leaves either 'q' or 'v' in its default unassigned state.
-  In loop(), q and v are unassi
+  In loop(), q and v are unassigned
   */
   // so these few lines are pretty self explanatory: create new sensor_value struct, and then read the imu, and if the read fails print an error
   sh2_SensorValue_t sensor_value;
