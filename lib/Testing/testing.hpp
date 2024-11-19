@@ -16,15 +16,16 @@ namespace test_parameters
     If I understand this code I think I could try and implement some system that hits a series of quaternions in a row,
     */
 
-    unsigned long timeout_sec = 300;
-    constexpr float test_delay = 0.f;
+    constexpr float test_delay = 0.f; // time for program to wait after initiating to start testing
+    unsigned long timeout_sec = 300;  // time after 'test_delay' the program will run before stopping, so if the reaction wheel explodes it'll eventually stop spinning
 
-    int test_index = 0;
-    long test_init_time = 0;
+    int test_index = 0;      // index of current test
+    long test_init_time = 0; // time current test started in millis
 
-    constexpr float torque_PD_params[2] = {1.f, 0.f};
-    constexpr float wheel_speed_PD_params[2] = {1e-3, 0.f};
+    constexpr float torque_PD_params[2] = {1.f, 0.f};       // quaternion torque controller PD params
+    constexpr float wheel_speed_PD_params[2] = {1e-3, 0.f}; // wheel speed controller PD params
 
+    // outline of the basic information that makes up a single test object
     struct individual_test
     {
         bool is_indefinite;
@@ -34,7 +35,9 @@ namespace test_parameters
         float test_value[4];
     };
 
-    constexpr int number_of_tests = 3;
+    constexpr int number_of_tests = 3; // total number of tests
+
+    // data for each test, remember values are in the order of the 'individual_test' struct
     individual_test list_of_tests[number_of_tests] = {
         {false, 30.f, false, {100.f, 100.f, 100.f, 100.f}},
         {false, 120.f, true, {1.f, 0.f, 0.f, 0.f}},
