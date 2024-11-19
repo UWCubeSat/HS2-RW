@@ -41,7 +41,6 @@ namespace test_parameters
         {true, -1.f, true, {1.f, 0.f, 0.f, 1.f}},
     };
 
-    imu::Quaternion float_array_to_quaternion(float input[4]);
 
 } // namespace test_parameters
 #endif
