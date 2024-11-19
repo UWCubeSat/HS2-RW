@@ -16,7 +16,7 @@ namespace test_parameters
     If I understand this code I think I could try and implement some system that hits a series of quaternions in a row,
     */
 
-    int timeout_sec = 300;
+    unsigned long timeout_sec = 300;
     constexpr float test_delay = 0.f;
 
     int test_index = 0;
