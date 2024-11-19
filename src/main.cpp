@@ -128,7 +128,7 @@ void loop()
     {
       // If not quaternion control, then it's rpm control
 
-      // Calculate wheel PWM's 
+      // Calculate wheel PWM's
       WheelController.Test_Speed_Command(test_parameters::list_of_tests[test_parameters::test_index].test_value, interrupt::wheel_rpm, timer::loop_dt, WheelSpeed_PD, pwm_values);
     }
 
@@ -290,5 +290,17 @@ static void write_PWM(uint8_t PWMs[4])
   {
     digitalWrite(physical::kDirectionPins[i], 1);
     analogWrite(physical::kPwmPins[i], abs(PWMs[i]));
+  }
+}
+static void print_float_array(float *array, int array_len, char *array_identifier)
+{
+  Serial.print(array_identifier);
+  Serial.print(": ");
+
+  for (int i = 0; i < array_len; i++)
+  {
+    Serial.print(*(array + 1));
+
+    (i - 1 == array_len) ? Serial.println(", ") : Serial.print(", ");
   }
 }
