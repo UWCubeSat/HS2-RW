@@ -44,44 +44,9 @@ namespace timer
 namespace util
 {
     // returns 1 if x > 0, 0 if x = 0, -1 if x < 0
-    static inline bool sign(double x) { return (x < 0) ? -1 : ((x > 0) ? 1 : 0); }
+    static inline int8_t sign(double x) { return (x < 0) ? -1 : ((x > 0) ? 1 : 0); }
 }
 
 /* configurable parameters for testing */
 
-namespace test_parameters
-{
-    /*
-    so my understanding is the motors will spin up to the RPM's in 'target_speed', and then after 'spin_up_ticks', then they will try to orient themselves in the direction of 'target_quaternion'
-
-    I added 'spin_up_seconds', which replaces 'spin_up_ticks' by using the time since the program started instead of cycles, I also commented out the counter variable in main.cpp and added in one for 'spin_up_seconds', so that it works. My idea with this is that it might be easier to know what's going on with testing if we have a time instead of a counter.
-    200 ticks probably takes a lot less than a second, so I think the current value of 5 seconds for 'spin_up_seconds' is overkill but idk.
-
-    I also think that this is without the imu's magnetometer, meaning that the the initial rotation quaternion is wherever the system was pointing when it started.
-
-    If I understand this code I think I could try and implement some system that hits a series of quaternions in a row,
-    */
-
-    const float torque_PD_params[] = {1.f, 0.f};
-    const float wheel_speed_PD_params[] = {1e-3, 0.f};
-
-    float target_speed[] = {15000.f, 15000.f, 15000.f, 15000.f};
-    imu::Quaternion target_quaternion(0.0, 0.0, 0.0, 1.0);
-
-    const int spin_up_ticks = 200;
-
-    const float spin_up_seconds = 5.f;
-
-    /*
-    I'm going to include a bunch of variables that I see are used as constants but I don't know if/to what extent they actually are:
-    Note: be super careful about messing with these because as of writing this I haven't gotten to mess with the testing setup yet, so what I think are arbitrary constants could be actual hard system limits.
-    */
-
-    // ORIGINAL PARAM IN 'lib/RwStatus.hpp':
-    // static constexpr float kZeroRpm = 7500;  // midpoint of min and max  // true 15500
-    //const int rpm_midpoint = 7500;
-
-    
-
-}
 #endif // RW_SRC_MAIN_HPP_

@@ -8,6 +8,7 @@
 #include "RwStatus.hpp"
 #include "Controller.hpp"
 #include "PointingModes.hpp"
+#include "testing.hpp"
 
 /* Setup functions */
 // Initializes serial monitor
@@ -21,6 +22,9 @@ static void SetupImu();
 static void SetupSd();
 // Initializes interrupt pins and timer
 static void SetupRpm();
+
+static void write_PWM(uint8_t PWMs[4]);
+// writes the pwm values to appropriate pins, defined out for readability
 
 rw_status::RwStatus wheel_status;
 controller::QuaternionPD QuaternionTorque_PD(test_parameters::torque_PD_params[0], test_parameters::torque_PD_params[1]);
@@ -45,22 +49,36 @@ void setup()
 
   timer::init_time = millis();
   timer::loop_start_time = timer::init_time;
+
+  test_parameters::test_init_time = timer::init_time;
 }
 
 int counter = 0;
 void loop()
 {
+  if (counter % 10 == 0)
+  {
+    if (millis() > (test_parameters::timeout_sec * 1000.f) + timer::init_time)
+    {
+      // this completely halts the program and stops it
+      //  the intent is that if a test goes wrong the test will stop on its own after an amount of time
+      while (true)
+      {
+        delay(10);
+      }
+    }
+  }
   UpdateSysTime();
+  counter++;
 
   imu::Quaternion current_quaternion;
   imu::Vector<3> current_gyro_reading;
   ReadImu(current_quaternion, current_gyro_reading);
 
-  imu::Vector<3> torque_req = QuaternionTorque_PD.Compute(test_parameters::target_quaternion, current_quaternion, current_gyro_reading);
-  float wheel_torques[4];
-  uint8_t pwm[4];
+  // imu::Quaternion qe = test_parameters::target_quaternion.conjugate() * current_quaternion;
+
+  /*
   Serial.print("q: ");
-  imu::Quaternion qe = test_parameters::target_quaternion.conjugate() * current_quaternion;
   Serial.print(current_quaternion.w());
   Serial.print(", ");
   Serial.print(current_quaternion.x());
@@ -68,7 +86,7 @@ void loop()
   Serial.print(current_quaternion.y());
   Serial.print(", ");
   Serial.println(current_quaternion.z());
-  /*
+
   Serial.print("wheel_torques: ");
   Serial.println(wheel_torques[0]);
   Serial.print("dt: ");
@@ -78,53 +96,80 @@ void loop()
   Serial.println(interrupt::wheel_rpm[0]);
 */
 
-  // if (counter < test_parameters::spin_up_ticks)
-  if (timer::init_time / 1000.f < test_parameters::spin_up_seconds)
+  if ((test_parameters::list_of_tests[test_parameters::test_index].is_indefinite == true) || test_parameters::list_of_tests[test_parameters::test_index].delay_time < (millis() - test_parameters::test_init_time))
   {
-    WheelController.Test_Speed_Command(test_parameters::target_speed, interrupt::wheel_rpm, timer::loop_dt, WheelSpeed_PD, pwm);
-    // counter++;
-    Serial.println("init speeds");
+    uint8_t pwm_values[4] = {0, 0, 0, 0};
+
+    if (test_parameters::list_of_tests[test_parameters::test_index].is_using_quaternion == true)
+    {
+      imu::Quaternion target_quaternion(test_parameters::list_of_tests[test_parameters::test_index].test_value[0], test_parameters::list_of_tests[test_parameters::test_index].test_value[1], test_parameters::list_of_tests[test_parameters::test_index].test_value[2], test_parameters::list_of_tests[test_parameters::test_index].test_value[3]);
+
+      imu::Vector<3> required_torque = QuaternionTorque_PD.Compute(target_quaternion, current_quaternion, current_gyro_reading);
+
+      float required_wheel_torques[4];
+
+      WheelController.Calculate(required_torque, required_wheel_torques);
+      WheelController.Pid_Speed(required_wheel_torques, timer::loop_dt, WheelSpeed_PD, interrupt::wheel_rpm, pwm_values);
+    }
+    else
+    {
+      WheelController.Test_Speed_Command(test_parameters::list_of_tests[test_parameters::test_index].test_value, interrupt::wheel_rpm, timer::loop_dt, WheelSpeed_PD, pwm_values);
+    }
+
+    write_PWM(pwm_values);
   }
   else
   {
-    WheelController.Calculate(torque_req, wheel_torques);
-    WheelController.Pid_Speed(wheel_torques, timer::loop_dt, WheelSpeed_PD, interrupt::wheel_rpm, pwm);
+    test_parameters::test_init_time = millis();
+    test_parameters::test_index++;
   }
-
-  for (int i = 0; i < 4; i++)
-  {
-    digitalWrite(physical::kDirectionPins[i], 1);
-    analogWrite(physical::kPwmPins[i], abs(pwm[i]));
-  }
-
-  // TODO: use wheel_status
   /*
-  Serial.println(interrupt::wheel_rpm[0]);
-  Serial.println(interrupt::wheel_rpm[1]);
-  Serial.println(interrupt::wheel_rpm[2]);
-  Serial.println(interrupt::wheel_rpm[3]);
-  Serial.println(v[0]);
-  Serial.println(v[1]);
-  Serial.println(v[2]);
+    if (timer::init_time / 1000.f < test_parameters::spin_up_seconds)
+    {
+      WheelController.Test_Speed_Command(test_parameters::target_speed, interrupt::wheel_rpm, timer::loop_dt, WheelSpeed_PD, pwm);
+    }
+    else
+    {
+
+      imu::Vector<3> torque_req = QuaternionTorque_PD.Compute(test_parameters::target_quaternion, current_quaternion, current_gyro_reading);
+      float wheel_torques[4];
+      uint8_t pwm[4];
+      WheelController.Calculate(torque_req, wheel_torques);
+      WheelController.Pid_Speed(wheel_torques, timer::loop_dt, WheelSpeed_PD, interrupt::wheel_rpm, pwm);
+    }
+
+
   */
-  Serial.println(pwm[0]);
-  Serial.println(pwm[1]);
-  Serial.println(pwm[2]);
-  Serial.println(pwm[3]);
   /*
-  Serial.println(torque_req[0]);
-  Serial.println(torque_req[1]);
-  Serial.println(torque_req[2]);
-  Serial.println(wheel_torques[0]);
-  Serial.println(wheel_torques[1]);
-  Serial.println(wheel_torques[2]);
-  Serial.println(wheel_torques[3]);
-  Serial.println(q.w());
-  Serial.println(q.x());
-  Serial.println(q.y());
-  Serial.println(q.z());
-  */
-  Serial.println("");
+    // TODO: use wheel_status
+
+    Serial.println(interrupt::wheel_rpm[0]);
+    Serial.println(interrupt::wheel_rpm[1]);
+    Serial.println(interrupt::wheel_rpm[2]);
+    Serial.println(interrupt::wheel_rpm[3]);
+    Serial.println(v[0]);
+    Serial.println(v[1]);
+    Serial.println(v[2]);
+
+    Serial.println(pwm[0]);
+    Serial.println(pwm[1]);
+    Serial.println(pwm[2]);
+    Serial.println(pwm[3]);
+
+    Serial.println(torque_req[0]);
+    Serial.println(torque_req[1]);
+    Serial.println(torque_req[2]);
+    Serial.println(wheel_torques[0]);
+    Serial.println(wheel_torques[1]);
+    Serial.println(wheel_torques[2]);
+    Serial.println(wheel_torques[3]);
+    Serial.println(q.w());
+    Serial.println(q.x());
+    Serial.println(q.y());
+    Serial.println(q.z());
+
+    Serial.println("")
+    */
 }
 
 /* Setup */
@@ -258,5 +303,13 @@ static void ReadImu(imu::Quaternion &q, imu::Vector<3> &v)
   case SH2_GYROSCOPE_CALIBRATED:
     v = {sensor_value.un.gyroscope.x, sensor_value.un.gyroscope.y,
          sensor_value.un.gyroscope.z};
+  }
+}
+static void write_PWM(uint8_t PWMs[4])
+{
+  for (int i = 0; i < 4; i++)
+  {
+    digitalWrite(physical::kDirectionPins[i], 1);
+    analogWrite(physical::kPwmPins[i], abs(PWMs[i]));
   }
 }
