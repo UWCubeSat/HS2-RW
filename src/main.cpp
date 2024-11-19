@@ -53,14 +53,16 @@ void setup()
   timer::loop_start_time = timer::init_time;
 
   test_parameters::test_init_time = timer::init_time;
+  test_parameters::timeout_sec = (test_parameters::timeout_sec * 1000) + timer::init_time;
 }
 
 int counter = 0;
 void loop()
 {
   if (counter % 10 == 0)
+  // the reason this runs ever 10 cycles was so that theoretically the millis() function is only run every 10 cycles, hopefully reducing performance cost of a function that doesn't need to be super accurately timed.
   {
-    if (millis() > (test_parameters::timeout_sec * 1000.f) + timer::init_time)
+    if (millis() > test_parameters::timeout_sec)
     {
       // this completely halts the program and stops it
       //  the intent is that if a test goes wrong the test will stop on its own after an amount of time
@@ -73,6 +75,7 @@ void loop()
   UpdateSysTime();
   counter++;
 
+  // The loop reads the IMU every cycle regardless of whether
   imu::Quaternion current_quaternion;
   imu::Vector<3> current_gyro_reading;
   ReadImu(current_quaternion, current_gyro_reading);
@@ -98,14 +101,22 @@ void loop()
   Serial.println(interrupt::wheel_rpm[0]);
 */
 
+  // this block of code is responsible for the testing logic
+
   if ((test_parameters::list_of_tests[test_parameters::test_index].is_indefinite == true) || test_parameters::list_of_tests[test_parameters::test_index].delay_time < (millis() - test_parameters::test_init_time))
+  // this if statement checks if either the current test's time hasn't elapsed or whether the current test has the indefinite value set to true, if yes to either the test changes
   {
-    uint8_t pwm_values[4] = {0, 0, 0, 0};
+    /*if a test is going on, this codeblock runs*/
+
+    uint8_t pwm_values[4] = {0, 0, 0, 0}; // creating pwm values
 
     if (test_parameters::list_of_tests[test_parameters::test_index].is_using_quaternion == true)
+    // if test is quaternion control
     {
+      // get target quaternion from list_of_tests
       imu::Quaternion target_quaternion(test_parameters::list_of_tests[test_parameters::test_index].test_value[0], test_parameters::list_of_tests[test_parameters::test_index].test_value[1], test_parameters::list_of_tests[test_parameters::test_index].test_value[2], test_parameters::list_of_tests[test_parameters::test_index].test_value[3]);
 
+      // calculate required torque from previously calculated wheel torques
       imu::Vector<3> required_torque = QuaternionTorque_PD.Compute(target_quaternion, current_quaternion, current_gyro_reading);
 
       float required_wheel_torques[4];
@@ -115,6 +126,9 @@ void loop()
     }
     else
     {
+      // If not quaternion control, then it's rpm control
+
+      // Calculate wheel PWM's 
       WheelController.Test_Speed_Command(test_parameters::list_of_tests[test_parameters::test_index].test_value, interrupt::wheel_rpm, timer::loop_dt, WheelSpeed_PD, pwm_values);
     }
 
@@ -122,56 +136,19 @@ void loop()
   }
   else
   {
-    test_parameters::test_init_time = millis();
-    test_parameters::test_index++;
-  }
-  /*
-    if (timer::init_time / 1000.f < test_parameters::spin_up_seconds)
+    // if the current test is over, then either we advance to the next test, or there are no more tests, and the program is over
+
+    if (test_parameters::test_index < test_parameters::number_of_tests)
     {
-      WheelController.Test_Speed_Command(test_parameters::target_speed, interrupt::wheel_rpm, timer::loop_dt, WheelSpeed_PD, pwm);
+      // if the current test is over, update the index to the next test, and set the next test start time as the current time
+      test_parameters::test_index++;
+      test_parameters::test_init_time = millis();
     }
     else
     {
-
-      imu::Vector<3> torque_req = QuaternionTorque_PD.Compute(test_parameters::target_quaternion, current_quaternion, current_gyro_reading);
-      float wheel_torques[4];
-      uint8_t pwm[4];
-      WheelController.Calculate(torque_req, wheel_torques);
-      WheelController.Pid_Speed(wheel_torques, timer::loop_dt, WheelSpeed_PD, interrupt::wheel_rpm, pwm);
+      // the program has no more tests, so after the last test times out, then the code will end up here, which is an empty function and nothing will happen
     }
-
-
-  */
-  /*
-    // TODO: use wheel_status
-
-    Serial.println(interrupt::wheel_rpm[0]);
-    Serial.println(interrupt::wheel_rpm[1]);
-    Serial.println(interrupt::wheel_rpm[2]);
-    Serial.println(interrupt::wheel_rpm[3]);
-    Serial.println(v[0]);
-    Serial.println(v[1]);
-    Serial.println(v[2]);
-
-    Serial.println(pwm[0]);
-    Serial.println(pwm[1]);
-    Serial.println(pwm[2]);
-    Serial.println(pwm[3]);
-
-    Serial.println(torque_req[0]);
-    Serial.println(torque_req[1]);
-    Serial.println(torque_req[2]);
-    Serial.println(wheel_torques[0]);
-    Serial.println(wheel_torques[1]);
-    Serial.println(wheel_torques[2]);
-    Serial.println(wheel_torques[3]);
-    Serial.println(q.w());
-    Serial.println(q.x());
-    Serial.println(q.y());
-    Serial.println(q.z());
-
-    Serial.println("")
-    */
+  }
 }
 
 /* Setup */

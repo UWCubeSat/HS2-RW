@@ -16,7 +16,7 @@ namespace test_parameters
     If I understand this code I think I could try and implement some system that hits a series of quaternions in a row,
     */
 
-    constexpr float timeout_sec = 300.f;
+    int timeout_sec = 300;
     constexpr float test_delay = 0.f;
 
     int test_index = 0;
@@ -40,7 +40,6 @@ namespace test_parameters
         {false, 120.f, true, {1.f, 0.f, 0.f, 0.f}},
         {true, -1.f, true, {1.f, 0.f, 0.f, 1.f}},
     };
-
 
 } // namespace test_parameters
 #endif
