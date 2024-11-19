@@ -47,6 +47,8 @@ void setup()
   SetupSd();
   SetupRpm();
 
+  delay(test_parameters::test_delay * 1000);
+
   timer::init_time = millis();
   timer::loop_start_time = timer::init_time;
 
