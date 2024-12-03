@@ -4,8 +4,7 @@
 .vscode/launch.json
 .vscode/ipch
 .vscode/settings.json
-.pyc
-.xlsx
-.xls
-.cpy
-.cpython-312.pyc
+*.pyc
+*.xlsx
+*.xls
+*.cpy
