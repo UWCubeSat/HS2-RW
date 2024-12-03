@@ -10,3 +10,5 @@
 *.cpy
 __pycache__/**
 PC_tethered_testing/PC_code/lib/__pycache__/**
+
+/.vscode/**
