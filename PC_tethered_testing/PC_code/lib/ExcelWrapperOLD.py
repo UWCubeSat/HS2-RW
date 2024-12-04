@@ -1,5 +1,5 @@
 import xlwt
-import pathlib
+import sys
 
 import lib.CustomStructs
 
@@ -11,9 +11,19 @@ class ExcelWrapperObj:
     ExcelSheet: xlwt.Worksheet
     current_row = 1
 
-    def create_name(self, _inp_name: str, _inp_path: str = "testlogs/") -> str:
-        self._m_name = _inp_path+_inp_name.replace(
-            ":", ".").replace("  ", "_").replace(" ", "_")+".xls"
+    def create_name(
+        self, _inp_name: str, _inp_path: str, _inp_folder: str = "testlogs"
+    ) -> str:
+        if sys.platform == "win32":
+            _inp_path += r"\\" + _inp_folder + r"\\"
+        else:
+            _inp_path += r"/" + _inp_folder + r"/"
+
+        self._m_name = (
+            _inp_path
+            + _inp_name.replace(":", ".").replace("  ", "_").replace(" ", "_")
+            + ".xls"
+        )
 
         return self._m_name
 
@@ -30,20 +40,13 @@ class ExcelWrapperObj:
         )
         self._m_center_alignment = xlwt.easyxf("alignment: horizontal center;")
 
-        self.ExcelSheet.write(0, 0, "Time", style=self._m_center_alignment)
-        self.ExcelSheet.write(0, 1, "Target Quaternion",
-                              style=self._m_center_alignment)
-        self.ExcelSheet.write(
-            0, 2, "Current Quaternion", style=self._m_center_alignment
-        )
-        self.ExcelSheet.write(0, 3, "Target RPM",
-                              style=self._m_center_alignment)
-        self.ExcelSheet.write(0, 4, "Current RPM",
-                              style=self._m_center_alignment)
-        self.ExcelSheet.write(0, 5, "Current PWM",
-                              style=self._m_center_alignment)
-        self.ExcelSheet.write(0, 6, "Verification",
-                              style=self._m_center_alignment)
+        self.ExcelSheet.write(0, 0, "Time", self._m_center_alignment)
+        self.ExcelSheet.write(0, 1, "Target Quaternion", self._m_center_alignment)
+        self.ExcelSheet.write(0, 2, "Current Quaternion", self._m_center_alignment)
+        self.ExcelSheet.write(0, 3, "Target RPM", self._m_center_alignment)
+        self.ExcelSheet.write(0, 4, "Current RPM", self._m_center_alignment)
+        self.ExcelSheet.write(0, 5, "Current PWM", self._m_center_alignment)
+        self.ExcelSheet.write(0, 6, "Verification", self._m_center_alignment)
 
         for i in range(6):
             self.ExcelSheet.col(i).width = 256 * 25
@@ -67,10 +70,7 @@ class ExcelWrapperObj:
         _inp_time_since_start: float,
     ) -> None:
         self.ExcelSheet.write(
-            r=self.current_row,
-            c=0,
-            label=_inp_time_since_start,
-            style=self._m_center_alignment,
+            self.current_row, 0, _inp_time_since_start, self._m_center_alignment
         )
         if _inp_TestEntry.is_quaternion == True:
             self.ExcelSheet.write(
@@ -81,14 +81,14 @@ class ExcelWrapperObj:
                         _inp_TestEntry.test_information, self.spreadsheet_decimal_places
                     )
                 ),
-                style=self._m_center_alignment,
+                self._m_center_alignment,
             )
             self.ExcelSheet.write(
-                self.current_row, 3, str("unset"), style=self._m_center_alignment
+                self.current_row, 3, str("unset"), self._m_center_alignment
             )
         else:
             self.ExcelSheet.write(
-                self.current_row, 1, "unset", style=self._m_center_alignment
+                self.current_row, 1, "unset", self._m_center_alignment
             )
             self.ExcelSheet.write(
                 self.current_row,
@@ -98,7 +98,7 @@ class ExcelWrapperObj:
                         _inp_TestEntry.test_information, self.spreadsheet_decimal_places
                     )
                 ),
-                style=self._m_center_alignment,
+                self._m_center_alignment,
             )
 
         self.ExcelSheet.write(
@@ -109,7 +109,7 @@ class ExcelWrapperObj:
                     _inp_DataEntry.current_quaternion, self.spreadsheet_decimal_places
                 )
             ),
-            style=self._m_center_alignment,
+            self._m_center_alignment,
         )
 
         self.ExcelSheet.write(
@@ -120,7 +120,7 @@ class ExcelWrapperObj:
                     _inp_DataEntry.current_rpm, self.spreadsheet_decimal_places
                 )
             ),
-            style=self._m_center_alignment,
+            self._m_center_alignment,
         )
         self.ExcelSheet.write(
             self.current_row,
@@ -130,7 +130,7 @@ class ExcelWrapperObj:
                     _inp_DataEntry.current_pwm, self.spreadsheet_decimal_places
                 )
             ),
-            style=self._m_center_alignment,
+            self._m_center_alignment,
         )
 
         if (
@@ -147,12 +147,9 @@ class ExcelWrapperObj:
                 == lib.CustomStructs.ReferenceDataEntry.current_pwm
             )
         ):
-            self.ExcelSheet.write(self.current_row, 6,
-                                  "fail", self._m_color_orange)
+            self.ExcelSheet.write(self.current_row, 6, "fail", self._m_color_orange)
         else:
-            self.ExcelSheet.write(
-                self.current_row, 6, "pass", style=self._m_color_green
-            )
+            self.ExcelSheet.write(self.current_row, 6, "pass", self._m_color_green)
         self.current_row += 1
 
     def round_array(self, _inp_array: list, n_decimals: int) -> list:

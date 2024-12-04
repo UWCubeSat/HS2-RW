@@ -44,9 +44,8 @@ class RecorderAndController(ExcelWrapper.ExcelWrapperObj, SerialHelper.SerialHel
         # ---spreadsheet config---#
         print(
             f">>>saving testdata as: <{self.create_name(
-                _inp_name=(r"rws_test_" + str(time.ctime())))}>"
+                _inp_name=(r"rws_test_" + str(time.ctime())), _inp_path =str( pathlib.Path(__file__).parent.resolve()))}>"
         )
-
         # ---opening serial port---#
         if self.using_serial_port:
             self.block_until_serial_open(self.port, self.baud_rate)
@@ -77,8 +76,7 @@ class RecorderAndController(ExcelWrapper.ExcelWrapperObj, SerialHelper.SerialHel
 
         if self.using_serial_port:
             msg = (
-                self.start_char +
-                self.key_from_val("stop").to_bytes() + self.stop_char
+                self.start_char + self.key_from_val("stop").to_bytes() + self.stop_char
             )
             self.new_to_send_msg = True
             self.to_send_msg = msg
@@ -94,7 +92,6 @@ class RecorderAndController(ExcelWrapper.ExcelWrapperObj, SerialHelper.SerialHel
 
         current_time = time.time()
 
-        
         if (current_time - self.last_save_time) > self.seconds_between_saves:
             self.safe_save_to_file()
             self.last_save_time = current_time
@@ -199,8 +196,7 @@ class RecorderAndController(ExcelWrapper.ExcelWrapperObj, SerialHelper.SerialHel
             self.write_DataEntry_to_sheet(
                 self.spreadsheet_entry,
                 array_of_tests[self.test_index],
-                round(time.time() - self.init_time,
-                      self.spreadsheet_decimal_places),
+                round(time.time() - self.init_time, self.spreadsheet_decimal_places),
             )
             self.spreadsheet_entry = DataEntry()
             # time.sleep(0.0005)

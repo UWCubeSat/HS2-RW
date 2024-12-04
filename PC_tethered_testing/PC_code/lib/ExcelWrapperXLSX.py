@@ -1,6 +1,5 @@
 import xlsxwriter
-import pathlib
-
+import sys
 
 import lib.CustomStructs
 
@@ -12,9 +11,19 @@ class ExcelWrapperObj:
     ExcelSheet: xlsxwriter.worksheet
     current_row = 1
 
-    def create_name(self, _inp_name: str, _inp_path: str = "testlogs/") -> str:
-        self._m_name = _inp_path+_inp_name.replace(
-            ":", ".").replace("  ", "_").replace(" ", "_")+".xlsx"
+    def create_name(
+        self, _inp_name: str, _inp_path: str, _inp_folder: str = "testlogs"
+    ) -> str:
+        if sys.platform == "win32":
+            _inp_path += r"\\" + _inp_folder + r"\\"
+        else:
+            _inp_path += r"/" + _inp_folder + r"/"
+
+        self._m_name = (
+            _inp_path
+            + _inp_name.replace(":", ".").replace("  ", "_").replace(" ", "_")
+            + ".xlsx"
+        )
 
         return self._m_name
 
@@ -23,20 +32,17 @@ class ExcelWrapperObj:
         self._m_Workbook = xlsxwriter.Workbook(self._m_name)
         self.ExcelSheet = self._m_Workbook.add_worksheet()
 
-        self._m_center_alignment = self._m_Workbook.add_format(
-            {"align": "center"})
-        self._m_orange_color = self._m_Workbook.add_format(
+        self._m_center_alignment = self._m_Workbook.add_format({"align": "center"})
+        self._m_color_orange = self._m_Workbook.add_format(
             {"align": "center", "bg_color": "#ff6700"}
         )
-        self._m_green_color = self._m_Workbook.add_format(
+        self._m_color_green = self._m_Workbook.add_format(
             {"align": "center", "bg_color": "#00ff00"}
         )
 
         self.ExcelSheet.write(0, 0, "Time", self._m_center_alignment)
-        self.ExcelSheet.write(0, 1, "Target Quaternion",
-                              self._m_center_alignment)
-        self.ExcelSheet.write(0, 2, "Current Quaternion",
-                              self._m_center_alignment)
+        self.ExcelSheet.write(0, 1, "Target Quaternion", self._m_center_alignment)
+        self.ExcelSheet.write(0, 2, "Current Quaternion", self._m_center_alignment)
         self.ExcelSheet.write(0, 3, "Target RPM", self._m_center_alignment)
         self.ExcelSheet.write(0, 4, "Current RPM", self._m_center_alignment)
         self.ExcelSheet.write(0, 5, "Current PWM", self._m_center_alignment)
@@ -149,11 +155,9 @@ class ExcelWrapperObj:
                 == lib.CustomStructs.ReferenceDataEntry.current_pwm
             )
         ):
-            self.ExcelSheet.write(self.current_row, 6,
-                                  "fail", self._m_orange_color)
+            self.ExcelSheet.write(self.current_row, 6, "fail", self._m_color_orange)
         else:
-            self.ExcelSheet.write(self.current_row, 6,
-                                  "pass", self._m_green_color)
+            self.ExcelSheet.write(self.current_row, 6, "pass", self._m_color_green)
         self.current_row += 1
 
     def round_array(self, _inp_array: list, n_decimals: int) -> list:
