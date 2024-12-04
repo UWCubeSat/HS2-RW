@@ -9,5 +9,5 @@
 *.xls
 *.cpy
 */__pycache__/*
-.code-workspace
+*.code-workspace
 /.vscode/*
