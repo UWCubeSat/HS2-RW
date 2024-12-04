@@ -33,7 +33,7 @@ namespace physical
 /* Serial Info */
 namespace serial_stuff
 {
-    static constexpr int kSerialRate = 115200;
+    static constexpr uint32_t kSerialRate = 115200;
     static constexpr int cycles_per_print = 10;
 
     static constexpr char start_byte = '<';
@@ -84,10 +84,10 @@ namespace serial_stuff
         }
         Serial.write(serial_stuff::stop_byte);
     }
-    static void write_4_floats_to_serial(const uint8_t key, volatile float to_write[4])
+    static void write_4_floats_to_serial(const uint8_t key, float to_write[4])
     {
         serial_stuff::FLOATUNION_t to_write_floats[4];
-        memcpy(to_write, to_write_floats, 4 * sizeof(float));
+        memcpy(to_write_floats, to_write, 4 * sizeof(float));
 
         Serial.write(serial_stuff::start_byte);
         Serial.write(static_cast<byte>(key)); //  "get_quaternion"
@@ -179,4 +179,4 @@ namespace test_parameters
 
 } // namespace test_parameters
 
-#endif // RW_SRC_MAIN_HPP_
+#endif //RW_SRC_MAIN_HPP_

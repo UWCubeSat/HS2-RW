@@ -16,9 +16,6 @@ static void SetupSerial();
 static void SetupMotors();
 // Initializes the BNO085
 static void SetupImu();
-// Initializes SD card reader
-// Only necessary for testing. Should not exist in finished system
-static void SetupSd();
 // Initializes interrupt pins and timer
 static void SetupRpm();
 
@@ -27,7 +24,6 @@ static void write_PWM(uint8_t PWMs[4]);
 
 rw_status::RwStatus wheel_status;
 controller::QuaternionPD QuaternionTorque_PD(test_parameters::torque_PD_params[0], test_parameters::torque_PD_params[1]);
-// controller::WheelSpeedPD init_WheelSpeed_PD(1e-2, 0);
 controller::WheelSpeedPD WheelSpeed_PD(test_parameters::wheel_speed_PD_params[0], test_parameters::wheel_speed_PD_params[1]);
 pointing_modes::FourWheelMode WheelController;
 
@@ -44,7 +40,7 @@ void setup()
   SetupSerial();
   SetupMotors();
   SetupImu();
-  //SetupSd();
+  // SetupSd();
   SetupRpm();
 
   Serial.write(serial_stuff::MCU_init_phrase);
@@ -101,13 +97,13 @@ void loop()
       break;
     case 10: //  "set_quaternion"
       serial_stuff::FLOATUNION_t current_quaternion_float[4];
-      memcpy(serial_stuff::current_argument, current_quaternion_float, 16);
+      memcpy(current_quaternion_float, serial_stuff::current_argument, 16);
       target_quaternion = imu::Quaternion(current_quaternion_float[0].number, current_quaternion_float[1].number, current_quaternion_float[2].number, current_quaternion_float[3].number);
 
       is_using_quaternion = true;
       break;
     case 20: //  "set_rpm"
-      memcpy(serial_stuff::current_argument, target_RPM, 16);
+      memcpy(target_RPM, serial_stuff::current_argument, 16);
 
       is_using_quaternion = false;
       break;
@@ -127,7 +123,15 @@ void loop()
     serial_stuff::write_quaternion_to_serial(11, current_quaternion);
 
     //  21, "get_rpm"
-    serial_stuff::write_4_floats_to_serial(21, interrupt::wheel_rpm);
+
+    float temp_rpm[4];
+
+    for (int i = 0; i < 4; i++)
+    {
+      temp_rpm[i] = interrupt::wheel_rpm[i];
+    }
+
+    serial_stuff::write_4_floats_to_serial(21, temp_rpm);
   }
 
   if (activated)
@@ -161,75 +165,6 @@ void loop()
       Serial.write(serial_stuff::stop_byte);
     }
   }
-
-  /*
-  // imu::Quaternion qe = test_parameters::target_quaternion.conjugate() * current_quaternion;
-
-  // this block of code is responsible for the testing logic
-
-
-    if ((test_parameters::list_of_tests[test_parameters::test_index].is_indefinite == true) || test_parameters::list_of_tests[test_parameters::test_index].delay_time < (millis() - test_parameters::test_init_time))
-    // this if statement checks if either the current test's time hasn't elapsed or whether the current test has the indefinite value set to true, if yes to either the test changes
-    {
-      if a test is going on, this codeblock runs
-
-      uint8_t pwm_values[4] = {0, 0, 0, 0}; // creating pwm values
-
-      if (test_parameters::list_of_tests[test_parameters::test_index].is_using_quaternion == true)
-      // if test is quaternion control
-      {
-        // get target quaternion from list_of_tests
-        imu::Quaternion target_quaternion(test_parameters::list_of_tests[test_parameters::test_index].test_value[0], test_parameters::list_of_tests[test_parameters::test_index].test_value[1], test_parameters::list_of_tests[test_parameters::test_index].test_value[2], test_parameters::list_of_tests[test_parameters::test_index].test_value[3]);
-
-        // calculate required torque from previously calculated wheel torques
-        imu::Vector<3> required_torque = QuaternionTorque_PD.Compute(target_quaternion, current_quaternion, current_gyro_reading);
-
-        float required_wheel_torques[4];
-
-        WheelController.Calculate(required_torque, required_wheel_torques);
-        WheelController.Pid_Speed(required_wheel_torques, timer::loop_dt, WheelSpeed_PD, interrupt::wheel_rpm, pwm_values);
-
-        if (should_serial && test_parameters::print_target_quaternion)
-        {
-          print_float_array(test_parameters::list_of_tests[test_parameters::test_index].test_value, 4, "Target Quaternion");
-        }
-      }
-      else
-      {
-        // If not quaternion control, then it's rpm control
-
-        // Calculate wheel PWM's
-        WheelController.Test_Speed_Command(test_parameters::list_of_tests[test_parameters::test_index].test_value, interrupt::wheel_rpm, timer::loop_dt, WheelSpeed_PD, pwm_values);
-
-        if (should_serial && test_parameters::print_target_RPM)
-        {
-          print_float_array(test_parameters::list_of_tests[test_parameters::test_index].test_value, 4, "Target RPM");
-        }
-      }
-
-      write_PWM(pwm_values);
-
-      if (should_serial && test_parameters::print_current_PWM)
-      {
-        print_float_array((float *)pwm_values, sizeof(pwm_values) / sizeof(pwm_values[0]), "PWMs");
-      }
-    }
-    else
-    {
-      // if the current test is over, then either we advance to the next test, or there are no more tests, and the program is over
-
-      if (test_parameters::test_index < test_parameters::number_of_tests)
-      {
-        // if the current test is over, update the index to the next test, and set the next test start time as the current time
-        test_parameters::test_index++;
-        test_parameters::test_init_time = millis();
-      }
-      else
-      {
-        // the program has no more tests, so after the last test times out, then the code will end up here, which is an empty function and nothing will happen
-      }
-    }
-    */
 }
 
 /* Setup */
@@ -275,31 +210,7 @@ static void SetupImu()
     Serial.println("Could not enable game vector");
   }
 }
-static void SetupSd()
-{
-  // init SD reader
-  pinMode(physical::kSdPin, OUTPUT);
-  digitalWrite(physical::kSdPin, HIGH);
-  pinMode(SS, OUTPUT);
-  if (!SD.begin(physical::kSdPin))
-  {
-    Serial.println("card failed or not present");
-    // don't do anything more:
-    return;
-  }
-  Serial.println("card initialized.");
-  physical::file = SD.open("data.csv", FILE_WRITE);
-  if (physical::file)
-  {
-    physical::file.println("setpoint,rpm0,error,send pwm");
-  }
-  else
-  {
-    Serial.println("card failed write");
-    physical::file.close();
-    exit(EXIT_FAILURE);
-  }
-}
+
 static void SetupRpm()
 {
   for (int i = 0; i < physical::kNumWheels; i++)
@@ -321,11 +232,7 @@ static void SetupRpm()
   // setup global timer
   interrupt::global_time = 0;
   ITimer3.init();
-  if (ITimer3.attachInterrupt(interrupt::kGlobalRate, interrupt::TimerHandler))
-  {
-    Serial.println("Starting ITimer3 OK, millis() = " + String(millis()));
-  }
-  else
+  if (!(ITimer3.attachInterrupt(interrupt::kGlobalRate, interrupt::TimerHandler)))
   {
     Serial.println("Can't set ITimer3. Select another freq. or timer");
   }
