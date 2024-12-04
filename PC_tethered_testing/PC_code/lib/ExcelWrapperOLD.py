@@ -11,19 +11,9 @@ class ExcelWrapperObj:
     ExcelSheet: xlwt.Worksheet
     current_row = 1
 
-    def create_name(self, seedname: str, path: str = "") -> str:
-        self._m_name = seedname.replace(":", ".").replace("  ", "_").replace(" ", "_")
-
-        if path != "":
-            self._m_name = (
-                (str(pathlib.Path(__file__).parent.resolve())).replace(r"\lib", "")
-                + r"\\"
-                + self._m_name
-                + ".xls"
-            )
-
-        else:
-            self._m_name = path + self._m_name + ".xls"
+    def create_name(self, _inp_name: str, _inp_path: str = "testlogs/") -> str:
+        self._m_name = _inp_path+_inp_name.replace(
+            ":", ".").replace("  ", "_").replace(" ", "_")+".xls"
 
         return self._m_name
 
@@ -41,14 +31,19 @@ class ExcelWrapperObj:
         self._m_center_alignment = xlwt.easyxf("alignment: horizontal center;")
 
         self.ExcelSheet.write(0, 0, "Time", style=self._m_center_alignment)
-        self.ExcelSheet.write(0, 1, "Target Quaternion", style=self._m_center_alignment)
+        self.ExcelSheet.write(0, 1, "Target Quaternion",
+                              style=self._m_center_alignment)
         self.ExcelSheet.write(
             0, 2, "Current Quaternion", style=self._m_center_alignment
         )
-        self.ExcelSheet.write(0, 3, "Target RPM", style=self._m_center_alignment)
-        self.ExcelSheet.write(0, 4, "Current RPM", style=self._m_center_alignment)
-        self.ExcelSheet.write(0, 5, "Current PWM", style=self._m_center_alignment)
-        self.ExcelSheet.write(0, 6, "Verification", style=self._m_center_alignment)
+        self.ExcelSheet.write(0, 3, "Target RPM",
+                              style=self._m_center_alignment)
+        self.ExcelSheet.write(0, 4, "Current RPM",
+                              style=self._m_center_alignment)
+        self.ExcelSheet.write(0, 5, "Current PWM",
+                              style=self._m_center_alignment)
+        self.ExcelSheet.write(0, 6, "Verification",
+                              style=self._m_center_alignment)
 
         for i in range(6):
             self.ExcelSheet.col(i).width = 256 * 25
@@ -60,6 +55,10 @@ class ExcelWrapperObj:
     ) -> None:
         if self._m_workbook_setup == True:
             self._m_Workbook.save(self._m_name)
+            print("workbook file saved")
+
+    def safe_save_on_exit(self):
+        self.safe_save_to_file()
 
     def write_DataEntry_to_sheet(
         self,
@@ -148,7 +147,8 @@ class ExcelWrapperObj:
                 == lib.CustomStructs.ReferenceDataEntry.current_pwm
             )
         ):
-            self.ExcelSheet.write(self.current_row, 6, "fail", self._m_color_orange)
+            self.ExcelSheet.write(self.current_row, 6,
+                                  "fail", self._m_color_orange)
         else:
             self.ExcelSheet.write(
                 self.current_row, 6, "pass", style=self._m_color_green

@@ -7,7 +7,6 @@ import lib.SerialHelper as SerialHelper
 import lib.ExcelWrapperXLSX as ExcelWrapper
 from lib.CustomStructs import TestEntry, DataEntry
 
-import tracemalloc
 
 test_delay = 1
 array_of_tests = (
@@ -34,7 +33,7 @@ class RecorderAndController(ExcelWrapper.ExcelWrapperObj, SerialHelper.SerialHel
 
     def __init__(self):
         print(">>>begin setup<<<")
-        super(RecorderAndController, self).__init__()
+        # super(RecorderAndController, self).__init__()
 
         # ---testing config---#
 
@@ -43,9 +42,9 @@ class RecorderAndController(ExcelWrapper.ExcelWrapperObj, SerialHelper.SerialHel
         self.init_time = time.time()
 
         # ---spreadsheet config---#
-        # self.spreadsheet_name = ExcelWrapper.create_name(r"testlogs\rws_test_" + str(time.ctime()))
         print(
-            f">>>saving testdata as: <{ self.create_name(seedname=(r"testlogs\rws_test_" + str(time.ctime())), path=str(pathlib.Path(__file__).parent.resolve()))}><<<"
+            f">>>saving testdata as: <{self.create_name(
+                _inp_name=(r"rws_test_" + str(time.ctime())))}>"
         )
 
         # ---opening serial port---#
@@ -73,17 +72,13 @@ class RecorderAndController(ExcelWrapper.ExcelWrapperObj, SerialHelper.SerialHel
         print(">>>init successful<<<")
 
     def __del__(self):
-        print(">>>saving file to drive, this may take a while!<<<")
 
-        try:
-            self.ExcelSheet.autofit()
-        except ExcelWrapper:
-            pass
-        self._m_Workbook.close()
+        self.safe_save_on_exit()
 
         if self.using_serial_port:
             msg = (
-                self.start_char + self.key_from_val("stop").to_bytes() + self.stop_char
+                self.start_char +
+                self.key_from_val("stop").to_bytes() + self.stop_char
             )
             self.new_to_send_msg = True
             self.to_send_msg = msg
@@ -99,10 +94,10 @@ class RecorderAndController(ExcelWrapper.ExcelWrapperObj, SerialHelper.SerialHel
 
         current_time = time.time()
 
+        
         if (current_time - self.last_save_time) > self.seconds_between_saves:
             self.safe_save_to_file()
             self.last_save_time = current_time
-            print("workbook file saved")
 
         """
         if (current_time - self.last_entry_time) > self.seconds_between_entries:
@@ -138,7 +133,8 @@ class RecorderAndController(ExcelWrapper.ExcelWrapperObj, SerialHelper.SerialHel
                 # print("nya")
                 if self.test_index < len(array_of_tests) - 1:
                     print(
-                        f">>>completed test {self.test_index+1}, moving to test {self.test_index+2} (index starts at 1)<<<"
+                        f">>>completed test {
+                            self.test_index+1}, moving to test {self.test_index+2} (index starts at 1)<<<"
                     )
                     self.test_index += 1
                     self.test_setup = False
@@ -203,7 +199,8 @@ class RecorderAndController(ExcelWrapper.ExcelWrapperObj, SerialHelper.SerialHel
             self.write_DataEntry_to_sheet(
                 self.spreadsheet_entry,
                 array_of_tests[self.test_index],
-                round(time.time() - self.init_time, self.spreadsheet_decimal_places),
+                round(time.time() - self.init_time,
+                      self.spreadsheet_decimal_places),
             )
             self.spreadsheet_entry = DataEntry()
             # time.sleep(0.0005)
@@ -221,22 +218,13 @@ class RecorderAndController(ExcelWrapper.ExcelWrapperObj, SerialHelper.SerialHel
 
 
 def main():
-    tracemalloc.start()
-
-    start = time.time()
     RecorderAndController_Object = RecorderAndController()
-    nya = True
 
     try:
         while True:
-            if (nya == True) and ((time.time() - start) > 1):
-                meow = tracemalloc.get_traced_memory()
-                print( meow[1] / (1024**2))
-                nya = False
-
             RecorderAndController_Object.mainloop()
     except KeyboardInterrupt:
-        tracemalloc.stop()
+        pass
 
 
 if __name__ == "__main__":
