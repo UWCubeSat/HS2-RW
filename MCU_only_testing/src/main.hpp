@@ -10,13 +10,13 @@
 namespace physical
 {
     // physical constants
-    static constexpr uint16_t kSerialRate = 9600;
+    static const long kSerialRate = 115200;
     static constexpr uint8_t kNumWheels = 4;
 
     // pins
-    const uint8_t kPwmPins[kNumWheels] = {10, 11, 12, 13};
-    const uint8_t kDirectionPins[kNumWheels] = {44, 40, 36, 32};
-    const uint8_t kFgPins[kNumWheels] = {18, 19, 2, 3}; // rpm reading pins
+    constexpr uint8_t kPwmPins[kNumWheels] = {10, 11, 12, 13};
+    constexpr uint8_t kDirectionPins[kNumWheels] = {44, 40, 36, 32};
+    constexpr uint8_t kFgPins[kNumWheels] = {18, 19, 2, 3}; // rpm reading pins
 
     // signals
     uint8_t pwm_signal[kNumWheels] = {0, 0, 0, 0};       // 0-255
@@ -34,10 +34,12 @@ namespace physical
 /* Timing */
 namespace timer
 {
-    uint8_t init_time;             // time in ms of finish setup
-    uint32_t loop_start_time;      // time in ms of this loop
-    uint32_t loop_prev_start_time; // time in ms of prev loop
-    uint32_t loop_dt;              // delta between current and prev loop
+    uint8_t init_time;                // time in ms of finish setup
+    uint32_t current_loop_start_time; // time in ms of this loop
+    uint32_t prev_loop_start_time;    // time in ms of prev loop
+    uint32_t loop_dt;                 // delta between current and prev loop
+
+    int counter = 0;
 } // global time
 
 /* Utility functions*/
@@ -49,4 +51,4 @@ namespace util
 
 /* configurable parameters for testing */
 
-#endif // RW_SRC_MAIN_HPP_
+#endif 

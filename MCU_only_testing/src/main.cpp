@@ -39,42 +39,47 @@ static void UpdateSysTime();
 // Returns the attitude quaternion reading in q and angular velocity in v.
 static void ReadImu(imu::Quaternion &q, imu::Vector<3> &v);
 
-static void print_float_array(volatile float *array, int array_len, const char *array_identifier);
+static void print_float_array(float *array, int array_len, const char *array_identifier);
 
+long timeout_ms;
 void setup()
 {
-  Serial.println("Begin Setup");
-
   SetupSerial();
+  Serial.println("begin setup");
+
   SetupMotors();
+  /*
+  these two are commented out because currently testing only with arduino
   SetupImu();
   SetupSd();
+  */
   SetupRpm();
+  Serial.println("setup successful!");
 
-  delay(test_parameters::test_delay * 1000);
+  Serial.println("starting testing delay");
+  delay((long)(test_parameters::test_delay_secs) * 1000);
+  Serial.println("testing delay over");
 
   timer::init_time = millis();
-  timer::loop_start_time = timer::init_time;
+  timer::current_loop_start_time = timer::init_time;
+  test_parameters::test_init_time_ms = timer::init_time;
 
-  test_parameters::test_init_time = timer::init_time;
-  test_parameters::timeout_sec = (test_parameters::timeout_sec * 1000) + timer::init_time;
-
-  Serial.println("Setup Successful!");
+  timeout_ms = (test_parameters::timeout_secs * 1000) + timer::init_time;
 }
 
-int counter = 0;
 bool should_print = false;
 void loop()
 {
+  UpdateSysTime();
 
-  if (millis() > test_parameters::timeout_sec)
+  if (timer::current_loop_start_time > ((test_parameters::timeout_secs * 1000) + timer::init_time))
   {
     // this completely halts the program and stops it
-    //  the intent is that if a test goes wrong the test will stop on its own after an amount of time
-    while (true)
-    {
-      delay(10);
-    }
+    // the intent is that if a test goes wrong the test will stop on its own after an amount of time
+    Serial.println("test timeout exceeded");
+    Serial.flush();
+
+    exit(EXIT_SUCCESS);
   }
 
   /*
@@ -82,19 +87,19 @@ void loop()
   This is its own block because different print functions need to occur at different places, and it saves having to do the calculation multiple different times.
   ie if you want to print both target quaternion and target rpm, those don't exist at the same time so you need separate print blocks for each, and having the should_print flag improves readability
   */
-  bool should_print = false;
-  if (counter % test_parameters::cycles_per_print == 0)
+  if (timer::counter % test_parameters::cycles_per_print == 0)
   {
     should_print = true;
   }
-
-  UpdateSysTime();
-  counter++;
+  else
+  {
+    should_print = false;
+  }
 
   // The loop reads the IMU every cycle regardless of whether
   imu::Quaternion current_quaternion;
   imu::Vector<3> current_gyro_reading;
-  ReadImu(current_quaternion, current_gyro_reading);
+  // ReadImu(current_quaternion, current_gyro_reading);- left commented out because currently testing only with arduino
 
   if (should_print)
   {
@@ -105,14 +110,16 @@ void loop()
     }
     if (test_parameters::print_current_RPM)
     {
-      print_float_array(interrupt::wheel_rpm, sizeof(interrupt::wheel_rpm) / sizeof(interrupt::wheel_rpm[0]), "Current RPMs");
+      float rpm_array[4] = {interrupt::wheel_rpm[0], interrupt::wheel_rpm[1], interrupt::wheel_rpm[2], interrupt::wheel_rpm[3]};
+
+      print_float_array(rpm_array, sizeof(interrupt::wheel_rpm) / sizeof(interrupt::wheel_rpm[0]), "Current RPMs");
     }
   }
   // imu::Quaternion qe = test_parameters::target_quaternion.conjugate() * current_quaternion;
 
   // this block of code is responsible for the testing logic
+  if ((test_parameters::list_of_tests[test_parameters::test_index].is_indefinite == true) || (test_parameters::list_of_tests[test_parameters::test_index].delay_time_secs * 1000) > (timer::current_loop_start_time - test_parameters::test_init_time_ms))
 
-  if ((test_parameters::list_of_tests[test_parameters::test_index].is_indefinite == true) || test_parameters::list_of_tests[test_parameters::test_index].delay_time < (millis() - test_parameters::test_init_time))
   // this if statement checks if either the current test's time hasn't elapsed or whether the current test has the indefinite value set to true, if yes to either the test changes
   {
     /*if a test is going on, this codeblock runs*/
@@ -155,7 +162,13 @@ void loop()
 
     if (should_print && test_parameters::print_current_PWM)
     {
-      print_float_array((float *)pwm_values, sizeof(pwm_values) / sizeof(pwm_values[0]), "PWMs");
+      Serial.print("PWMs:");
+      for (int i = 0; i < 4; i++)
+      {
+        Serial.print(pwm_values[i]);
+        Serial.print(", ");
+      }
+      Serial.print("\n");
     }
   }
   else
@@ -165,33 +178,23 @@ void loop()
     if (test_parameters::test_index < test_parameters::number_of_tests)
     {
       // if the current test is over, update the index to the next test, and set the next test start time as the current time
+
+      Serial.print("test ");
+      Serial.print(test_parameters::test_index);
+      Serial.print(" over, beginning with test ");
+
       test_parameters::test_index++;
-      test_parameters::test_init_time = millis();
+      test_parameters::test_init_time_ms = timer::current_loop_start_time;
+
+      Serial.print(test_parameters::test_index);
+      Serial.println(" (0 indexed)");
     }
     else
     {
-      // the program has no more tests, so after the last test times out, then the code will end up here, which is an empty function and nothing will happen
+      // the program has no more tests, so after the last test times out, then the code will end up here, which is an empty block and nothing will happen
     }
   }
 }
-/*
-Serial.print("q: ");
-Serial.print(current_quaternion.w());
-Serial.print(", ");
-Serial.print(current_quaternion.x());
-Serial.print(", ");
-Serial.print(current_quaternion.y());
-Serial.print(", ");
-Serial.println(current_quaternion.z());
-
-Serial.print("wheel_torques: ");
-Serial.println(wheel_torques[0]);
-Serial.print("dt: ");
-Serial.println(timer::loop_dt);
-Serial.print("calc: ");
-Serial.println(wheel_torques[0] / WheelController.kWheelMoment[0] * timer::loop_dt);
-Serial.println(interrupt::wheel_rpm[0]);
-*/
 
 /* Setup */
 static void SetupSerial()
@@ -199,6 +202,7 @@ static void SetupSerial()
   Serial.begin(physical::kSerialRate);
   while (!Serial)
   {
+    delay(10);
   } // wait for Serial
 }
 static void SetupMotors()
@@ -207,7 +211,10 @@ static void SetupMotors()
   for (int i = 0; i < physical::kNumWheels; i++)
   {
     pinMode(physical::kPwmPins[i], OUTPUT);
+    digitalWrite(physical::kPwmPins[i], LOW);
+
     pinMode(physical::kDirectionPins[i], OUTPUT);
+    digitalWrite(physical::kDirectionPins[i], LOW);
   }
 }
 static void SetupImu()
@@ -217,6 +224,8 @@ static void SetupImu()
   if (!physical::bno.begin_I2C())
   {
     Serial.print("No BNO085 detected");
+    Serial.flush(); // flush here stops the message from not fully printing
+
     exit(EXIT_FAILURE);
   }
   // GAME_ROTATION_VECTOR has no magnetometer input, so it's more applicable
@@ -257,6 +266,8 @@ static void SetupSd()
   else
   {
     Serial.println("card failed write");
+    Serial.flush();
+
     physical::file.close();
     exit(EXIT_FAILURE);
   }
@@ -265,7 +276,7 @@ static void SetupRpm()
 {
   for (int i = 0; i < physical::kNumWheels; i++)
   {
-    pinMode(physical::kFgPins[i], INPUT);
+    pinMode(physical::kFgPins[i], INPUT_PULLUP);
   }
   attachInterrupt(digitalPinToInterrupt(physical::kFgPins[0]), interrupt::ReadRpm0, FALLING);
   attachInterrupt(digitalPinToInterrupt(physical::kFgPins[1]), interrupt::ReadRpm1, FALLING);
@@ -295,9 +306,10 @@ static void SetupRpm()
 /* Loop */
 static void UpdateSysTime()
 {
-  timer::loop_prev_start_time = timer::loop_start_time;
-  timer::loop_start_time = millis();
-  timer::loop_dt = timer::loop_start_time - timer::loop_prev_start_time;
+  timer::prev_loop_start_time = timer::current_loop_start_time;
+  timer::current_loop_start_time = millis();
+  timer::loop_dt = timer::current_loop_start_time - timer::prev_loop_start_time;
+  timer::counter++;
 }
 static void ReadImu(imu::Quaternion &q, imu::Vector<3> &v)
 {
@@ -334,8 +346,10 @@ static void write_PWM(uint8_t PWMs[4])
     analogWrite(physical::kPwmPins[i], abs(PWMs[i]));
   }
 }
-static void print_float_array(volatile float *array, int array_len, const char *array_identifier)
+static void print_float_array(float *array, int array_len, const char *array_identifier)
 {
+  return;
+
   Serial.print(array_identifier);
   Serial.print(": ");
 
