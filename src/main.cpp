@@ -37,7 +37,7 @@ pointing_modes::FourWheelMode WheelController;
 static void UpdateSysTime();
 // Reads the latest information from the imu.
 // Returns the attitude quaternion reading in q and angular velocity in v.
-static void ReadImu(imu::Quaternion &q, imu::Vector<3> &v);
+// static void ReadImu(imu::Quaternion &q, imu::Vector<3> &v);
 
 static void print_float_array(float *array, int array_len, const char *array_identifier);
 
@@ -50,9 +50,11 @@ void setup()
   SetupMotors();
   /*
   these two are commented out because currently testing only with arduino
-  SetupImu();
-  SetupSd();
   */
+
+  SetupImu();
+  /* SetupSd();
+   */
   SetupRpm();
   Serial.println("setup successful!");
 
@@ -97,9 +99,9 @@ void loop()
   }
 
   // The loop reads the IMU every cycle regardless of whether
-  imu::Quaternion current_quaternion;
-  imu::Vector<3> current_gyro_reading;
-  // ReadImu(current_quaternion, current_gyro_reading);- left commented out because currently testing only with arduino
+  imu::Quaternion current_quaternion = physical::bno.getQuat();
+  imu::Vector<3> current_gyro_reading = physical::bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
+  // ReadImu(current_quaternion, current_gyro_reading);//- left commented out because currently testing only with arduino
 
   if (should_serial)
   {
@@ -131,7 +133,6 @@ void loop()
     {
       // get target quaternion from list_of_tests
       imu::Quaternion target_quaternion(test_parameters::list_of_tests[test_parameters::test_index].test_value[0], test_parameters::list_of_tests[test_parameters::test_index].test_value[1], test_parameters::list_of_tests[test_parameters::test_index].test_value[2], test_parameters::list_of_tests[test_parameters::test_index].test_value[3]);
-
       // calculate required torque from previously calculated wheel torques
       imu::Vector<3> required_torque = QuaternionTorque_PD.Compute(target_quaternion, current_quaternion, current_gyro_reading);
 
@@ -221,13 +222,14 @@ static void SetupImu()
 {
   // TODO anything here failing is pretty bad. It would be impossible for both
   // reaction wheels and magnetorquers to have functionality.
-  if (!physical::bno.begin_I2C())
+  if (physical::bno.begin() == false)
   {
     Serial.print("No BNO085 detected");
     Serial.flush(); // flush here stops the message from not fully printing
 
     exit(EXIT_FAILURE);
   }
+  /*
   // GAME_ROTATION_VECTOR has no magnetometer input, so it's more applicable
   // to HS3. Consider making it absolute orientation (respective to magnetic
   // north) and doing math to get a relative orientation for satellites in a
@@ -244,6 +246,7 @@ static void SetupImu()
   {
     Serial.println("Could not enable game vector");
   }
+  */
 }
 static void SetupSd()
 {
@@ -311,12 +314,13 @@ static void UpdateSysTime()
   timer::loop_dt = timer::current_loop_start_time - timer::prev_loop_start_time;
   timer::counter++;
 }
+/*
 static void ReadImu(imu::Quaternion &q, imu::Vector<3> &v)
 {
-  /*
+
   One pretty fundamental question I have here is that I'm pretty sure this function leaves either 'q' or 'v' in its default unassigned state.
   In loop(), q and v are unassigned
-  */
+
   // so these few lines are pretty self explanatory: create new sensor_value struct, and then read the imu, and if the read fails print an error
   sh2_SensorValue_t sensor_value;
   if (!physical::bno.getSensorEvent(&sensor_value))
@@ -337,7 +341,7 @@ static void ReadImu(imu::Quaternion &q, imu::Vector<3> &v)
     v = {sensor_value.un.gyroscope.x, sensor_value.un.gyroscope.y,
          sensor_value.un.gyroscope.z};
   }
-}
+}*/
 static void write_PWM(uint8_t PWMs[4])
 {
   for (int i = 0; i < 4; i++)
@@ -348,7 +352,6 @@ static void write_PWM(uint8_t PWMs[4])
 }
 static void print_float_array(float *array, int array_len, const char *array_identifier)
 {
-  return;
 
   Serial.print(array_identifier);
   Serial.print(": ");

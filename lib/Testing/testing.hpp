@@ -9,7 +9,7 @@ namespace test_parameters
     //----basic params----//
 
     constexpr float test_delay_secs = 2.f; // time for program to wait after initiating to start testing
-    unsigned long timeout_secs = 5;   // time after 'test_delay_secs' the program will run before stopping and not reseting until hardware reset, so if the reaction wheel explodes it'll eventually stop spinning
+    unsigned long timeout_secs = 300;   // time after 'test_delay_secs' the program will run before stopping and not reseting until hardware reset, so if the reaction wheel explodes it'll eventually stop spinning
 
     int test_index = 0;      // index of current test
     long test_init_time_ms = 0; // time current test started in millis
@@ -42,11 +42,11 @@ namespace test_parameters
     //----printing and debugging----//
     constexpr int cycles_per_print = 100; // number of loops to occur for a print statement, this is done because 'Serial' functions are pretty slow so we can reduce the amount of printing
 
-    constexpr bool print_current_quaternion = false;
+    constexpr bool print_current_quaternion = true;
     constexpr bool print_target_quaternion = false;
 
     constexpr bool print_current_RPM = false;
-    constexpr bool print_target_RPM = true;
+    constexpr bool print_target_RPM = false;
 
     constexpr bool print_current_PWM = false;
 

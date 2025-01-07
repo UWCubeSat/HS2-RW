@@ -2,7 +2,8 @@
 #define RW_SRC_MAIN_HPP_
 
 #include "Arduino.h"
-#include <Adafruit_BNO08x.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
 #include <imumaths.hpp>
 #include "SD.h"
 
@@ -23,7 +24,10 @@ namespace physical
     uint8_t direction_signal[kNumWheels] = {1, 1, 1, 1}; // 1 clockwise, 0 ccw
 
     // imu
-    Adafruit_BNO08x bno(-1); // we use I2C for the IMU, so this is unnecessary
+    //Adafruit_BNO055x bno(-1); // we use I2C for the IMU, so this is unnecessary
+
+    Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28); // updated with different MCU model
+
 
     // SD reader
     static constexpr uint8_t kChipSelect = 53; // mega specific number
