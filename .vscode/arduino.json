@@ -1,0 +1,5 @@
+{
+    "configuration": "cpu=atmega2560",
+    "board": "arduino:avr:mega",
+    "sketch": "test_debug_programs/basic_bn055_print/basic_bn055_print.ino"
+}
