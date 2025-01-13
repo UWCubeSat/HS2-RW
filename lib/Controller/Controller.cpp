@@ -14,7 +14,7 @@ namespace controller
   imu::Quaternion QuaternionPD::CalcError(const imu::Quaternion &q_desired,
                                           const imu::Quaternion &q_curr) const
   {
-    return q_desired.conjugate() * q_curr;
+    return q_curr.conjugate() *q_desired;
   }
 
   float WheelSpeedPD::Compute(const float rpm_desired,
